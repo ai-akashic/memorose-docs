@@ -1,0 +1,129 @@
+---
+title: Introduction
+description: Memorose is a memory runtime for agents, with layered memory, shared organizational knowledge, tasks, multimodal ingest, and Raft-backed deployment.
+---
+
+# Memorose
+
+Memorose turns raw agent traffic into memory that compounds.
+
+It ingests events, consolidates facts and procedures, previews semantic updates or forgetting before execution, projects shared organizational knowledge, tracks goals and tasks, and keeps the whole runtime operable through a real dashboard and Raft-backed deployment model.
+
+<CardGroup cols={3}>
+  <Card title="Start with Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Log in, create a stream, ingest an event, retrieve memory.
+  </Card>
+  <Card title="Read the API" icon="rectangle-terminal" href="/api/rest-api">
+    Inspect the stream-first HTTP surface.
+  </Card>
+  <Card title="Understand the Model" icon="sitemap" href="/architecture/overview">
+    L0-L3 hierarchy, domains, and runtime pipeline.
+  </Card>
+</CardGroup>
+
+## Runtime Map
+
+<Steps>
+  <Step title="L0 — Raw Events">
+    Text, image, audio, video, and JSON enter as stream-scoped events.
+  </Step>
+  <Step title="L1 — Stable Memory">
+    Facts, preferences, procedural traces, and grounded summaries.
+  </Step>
+  <Step title="L2 — Insights">
+    Themes, graph-linked clusters, and shared organization knowledge.
+  </Step>
+  <Step title="L3 — Goals and Tasks">
+    Milestones, dependencies, progress, execution state, and sedimented outcomes.
+  </Step>
+</Steps>
+
+## API Snapshot
+
+```
+POST /v1/users/:uid/streams/:sid/retrieve
+```
+
+Request fields: `query`, `graph_depth`, `org_id`, `agent_id`, `image / audio / video`
+
+<Note>
+This docs set follows the real server model implemented in `memorose-server`, not the older CRUD-style memory API.
+</Note>
+
+## Three Core Surfaces
+
+<CardGroup cols={3}>
+  <Card title="Memory Runtime" icon="brain">
+    Streams, layered memory, hybrid retrieval, semantic update flows, and active forgetting.
+  </Card>
+  <Card title="Execution Layer" icon="list-check">
+    Task trees, ready queues, milestones, dependencies, and result sedimentation.
+  </Card>
+  <Card title="Operations Surface" icon="gauge">
+    Dashboard auth, cluster control, organization knowledge, and runtime inspection.
+  </Card>
+</CardGroup>
+
+## Stream-First HTTP Surface
+
+The current API is scoped by `user_id` and `stream_id`, then connected to tasks, graph edges, organization knowledge, and cluster operations.
+
+- `/events` for raw ingest
+- `/retrieve` for hybrid recall
+- `/memories/semantic/preview` and `/memories/semantic/execute` for semantic update and forgetting workflows
+- `/tasks/tree` and `/tasks/ready` for L3 execution state
+- `/organizations/:org_id/knowledge` for shared knowledge
+
+## Follow the Runtime Flow
+
+<Steps>
+  <Step title="Ingest events into a stream">
+    Everything starts as L0 input attached to a concrete user and stream timeline.
+  </Step>
+  <Step title="Consolidate into durable memory">
+    Facts and procedural traces become stable memory units instead of remaining raw traffic forever.
+  </Step>
+  <Step title="Retrieve with more than one signal">
+    Hybrid retrieval combines vector search, text search, graph depth, time filters, and shared organization knowledge.
+  </Step>
+  <Step title="Review memory changes and track execution">
+    Semantic update / forget previews plus L3 goals, milestones, dependencies, and completion summaries turn memory into an execution surface rather than a passive archive.
+  </Step>
+</Steps>
+
+## Choose By Job
+
+<CardGroup cols={3}>
+  <Card title="Build" icon="code" href="/getting-started/quickstart">
+    **I need to wire ingest and retrieval into an agent.**
+
+    Start with Quickstart, REST API, and Hybrid Search.
+  </Card>
+  <Card title="Operate" icon="server" href="/guides/dashboard">
+    **I need to inspect memory, tasks, knowledge, and cluster health.**
+
+    Go through Dashboard, Organization Knowledge, and Distributed Deployment.
+  </Card>
+  <Card title="Reason" icon="lightbulb" href="/architecture/overview">
+    **I need the model before I design wrappers or product behavior.**
+
+    Read Architecture, Memory Hierarchy, Memory Domains, and Forgetting Strategies.
+  </Card>
+</CardGroup>
+
+## Start Here
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/getting-started/quickstart">
+    Log in, create a stream, ingest an event, retrieve memory. Use the real `v1` routes with the current auth and response model.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+    Understand L0-L3, domains, and the runtime pipeline. Read the model before you build wrappers around the wrong abstraction.
+  </Card>
+  <Card title="Tasks" icon="list-check" href="/guides/tasks-and-goals">
+    See how goals and execution state are exposed in L3. Task trees and ready queues are part of the product, not an internal detail.
+  </Card>
+  <Card title="Organization Knowledge" icon="building" href="/guides/organization-knowledge">
+    Inspect the shared memory layer for one `org_id`. Use it when personal memory needs to evolve into reusable organizational knowledge.
+  </Card>
+</CardGroup>
