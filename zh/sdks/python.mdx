@@ -1,0 +1,27 @@
+---
+title: Python
+description: Python 的轻量 HTTP 客户端模式。
+---
+
+# Python
+
+当前 `v1` 运行时（runtime）没有在此发布稳定的 Python SDK。
+
+请使用轻量 HTTP 客户端代替。
+
+```python
+import requests
+
+base_url = "http://127.0.0.1:3000"
+token = "<dashboard-jwt>"
+stream_id = "<uuid>"
+
+response = requests.post(
+    f"{base_url}/v1/users/dylan/streams/{stream_id}/retrieve",
+    headers={"Authorization": f"Bearer {token}"},
+    json={"query": "What does Dylan prefer?", "limit": 5},
+    timeout=30,
+)
+
+print(response.json())
+```

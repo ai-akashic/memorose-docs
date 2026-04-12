@@ -1,0 +1,27 @@
+---
+title: Go
+description: Go 的 HTTP 客户端模式。
+---
+
+# Go
+
+当前 `v1` 运行时（runtime）没有在此发布稳定的 Go SDK。
+
+请使用标准库或你偏好的 HTTP 客户端。
+
+```go
+payload := strings.NewReader(`{"query":"What does Dylan prefer?","limit":5}`)
+req, _ := http.NewRequest(
+    http.MethodPost,
+    "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
+    payload,
+)
+req.Header.Set("Authorization", "Bearer "+token)
+req.Header.Set("Content-Type", "application/json")
+
+resp, err := http.DefaultClient.Do(req)
+if err != nil {
+    panic(err)
+}
+defer resp.Body.Close()
+```

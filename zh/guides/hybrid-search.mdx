@@ -1,0 +1,49 @@
+---
+title: 混合检索
+description: Memorose 如何组合语义、文本、图谱和时间维度的检索信号。
+---
+
+# 混合检索（Hybrid Search）
+
+Memorose 的检索结合了多种信号，而非依赖单一搜索路径。
+
+## 检索过程
+
+1. 对查询进行向量嵌入（Embedding）
+2. 对已存储的记忆单元执行向量检索（Vector Retrieval）
+3. 通过 Tantivy 执行文本检索（Text Retrieval）
+4. 可选的图谱扩展（Graph Expansion），使用 `graph_depth`
+5. 可包含共享的组织知识（Organization Knowledge）
+6. 将结果合并为一个排序后的响应
+
+## API 示例
+
+```bash
+curl -s -X POST "http://127.0.0.1:3000/v1/users/user_123/streams/$STREAM_ID/retrieve" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "org_id": "default",
+    "agent_id": "coding-assistant",
+    "query": "How should I help this user with Rust async work?",
+    "limit": 10,
+    "enable_arbitration": false,
+    "min_score": 0.2,
+    "graph_depth": 2
+  }'
+```
+
+## 常用过滤参数
+
+- `org_id`：包含组织范围的共享知识
+- `agent_id`：偏向某个智能体的程序性记忆（Procedural Memory）
+- `start_time` 和 `end_time`：有效时间过滤（Valid-time Filtering）
+- `as_of`：事务时间点过滤（Point-in-time Transaction Filtering）
+- `graph_depth`：从直接匹配的记忆扩展到相关的图谱上下文
+
+## 混合检索优于单模式检索的场景
+
+- 偏好和用户画像召回
+- 事实性与程序性混合查询
+- 同时需要精确词匹配和语义相似度的查询
+- 需要利用图谱邻居或组织知识的检索

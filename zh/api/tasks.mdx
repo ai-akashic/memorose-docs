@@ -1,0 +1,63 @@
+---
+title: 任务 API
+description: L3 任务与目标执行端点 — 任务树、就绪队列和状态更新。
+---
+
+# 任务 API（Tasks API）
+
+Memorose 将 `L3` 作为任务与目标执行层（Task and Goal Execution）暴露出来，而非隐藏在内部 Worker 之后。
+
+## 此路由组的用途
+
+当你需要以下操作时，使用任务 API：
+
+- 查看单个流的任务树
+- 查看单个用户的所有目标树
+- 拉取就绪可执行的工作
+- 执行后更新任务状态
+
+## 端点
+
+| Method | Endpoint | 用途 |
+| --- | --- | --- |
+| `GET` | `/v1/users/:user_id/streams/:stream_id/tasks/tree` | 返回单个流的目标树 |
+| `GET` | `/v1/users/:user_id/tasks/tree` | 返回单个用户的所有目标树 |
+| `GET` | `/v1/users/:user_id/tasks/ready` | 返回依赖已满足的就绪任务 |
+| `PUT` | `/v1/users/:user_id/tasks/:task_id/status` | 更新单个任务 |
+
+## 状态更新请求
+
+```http
+PUT /v1/users/user_123/tasks/11111111-1111-1111-1111-111111111111/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "Completed",
+  "progress": 1.0,
+  "result_summary": "Released the synchronized bilingual docs set."
+}
+```
+
+## 请求字段
+
+| Field | Type | Required | 描述 |
+| --- | --- | --- | --- |
+| `status` | enum | Yes | 新的任务状态 |
+| `progress` | number | No | 进度值，范围 `0.0` 到 `1.0` |
+| `result_summary` | string | No | 人类可读的结果摘要 |
+
+## 响应
+
+更新路由返回更新后的 `L3Task` 对象。
+
+## 实用说明
+
+- `status` 遵循 `memorose-common` 中的 `TaskStatus` 枚举。
+- 已完成的任务可以将其结果沉淀回事件流。
+- `ready` 任务不仅仅是待处理任务，而是依赖已全部满足的待处理任务。
+
+## 相关页面
+
+- [任务与目标指南](/zh/guides/tasks-and-goals)
+- [REST API](/zh/api/rest-api)

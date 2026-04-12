@@ -1,0 +1,93 @@
+---
+title: Contributing
+description: Guidelines for contributing code, documentation, and bug reports to Memorose.
+---
+
+# Contributing
+
+We welcome contributions of all kinds — bug fixes, new features, documentation improvements, and test coverage.
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork and clone">
+    Fork the repository on GitHub, then clone your fork locally.
+  </Step>
+  <Step title="Set up your environment">
+    Follow the [Development Setup](/contributing/dev-setup) guide to install dependencies and configure your local environment.
+  </Step>
+  <Step title="Create a branch">
+    Create a feature branch from `main`:
+    ```bash
+    git checkout -b feat/your-feature-name
+    ```
+  </Step>
+  <Step title="Make changes and test">
+    Write your code, then run the test suite. See the [Testing Guide](/contributing/testing) for details.
+    ```bash
+    cargo test
+    ```
+  </Step>
+  <Step title="Submit a pull request">
+    Push your branch and open a PR against `main`.
+  </Step>
+</Steps>
+
+## Branch Naming
+
+| Prefix | Use |
+| --- | --- |
+| `feat/` | New features |
+| `fix/` | Bug fixes |
+| `refactor/` | Code restructuring without behavior change |
+| `docs/` | Documentation only |
+| `test/` | Adding or improving tests |
+
+## Commit Messages
+
+Use concise, imperative-mood messages:
+
+```text
+feat: add semantic dedup to L1 consolidation
+fix: prevent panic on empty embedding batch
+docs: add testing guide for contributors
+```
+
+## Code Style
+
+### Rust
+
+- Run `cargo fmt` before committing
+- Run `cargo clippy` and resolve all warnings
+- Follow existing patterns in the codebase — when in doubt, look at neighboring code
+
+### TypeScript (Dashboard)
+
+- Run `pnpm lint` in the `dashboard/` directory
+- Use the existing SWR + `fetchAPI()` patterns for data fetching
+
+## Pull Request Guidelines
+
+- Keep PRs focused — one logical change per PR
+- Include a clear description of what changed and why
+- Add or update tests for any behavior changes
+- If your change affects the API surface, update the relevant documentation
+
+## Reporting Bugs
+
+Open a GitHub issue with:
+- Steps to reproduce
+- Expected vs actual behavior
+- Memorose version and environment details (OS, Rust version, LLM provider)
+
+## Documentation Contributions
+
+Documentation lives in the `memorose-docs/` repository, built with [Mintlify](https://mintlify.com).
+
+```bash
+npm i -g mint
+cd memorose-docs
+mint dev
+```
+
+Preview your changes at `http://localhost:3000`.

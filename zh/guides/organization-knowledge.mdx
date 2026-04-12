@@ -1,0 +1,34 @@
+---
+title: 组织知识
+description: 组织内可复用知识的共享记忆层。
+---
+
+# 组织知识（Organization Knowledge）
+
+组织知识是单个 `org_id` 内可复用知识的共享记忆层。
+
+## 端点
+
+- `GET /v1/organizations/:org_id/knowledge`
+- `GET /v1/organizations/:org_id/knowledge/:id`
+- `GET /v1/organizations/:org_id/knowledge/metrics`
+
+## 查询参数
+
+列表路由当前支持：
+
+- `q`：搜索文本
+- `contributor`：按贡献用户过滤
+- `source_type`：按来源记忆类型过滤
+- `sort`：可选值为 `published_desc`、`contributions_desc`、`active_desc`、`topic_asc`
+
+## 示例
+
+```bash
+curl -s "http://127.0.0.1:3000/v1/organizations/default/knowledge?q=rust&sort=published_desc" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 心智模型
+
+将其视为一个经过演化的读取模型，而非组织所有事件的转储。它应当保存多个用户和智能体（Agent）都能受益的可复用知识。

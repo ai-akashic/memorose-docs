@@ -1,0 +1,40 @@
+---
+title: 集群 API
+description: Raft 集群管理 — 初始化、加入和移除节点。
+---
+
+# 集群 API（Cluster API）
+
+Memorose 提供了一组用于 Raft 集群管理（Cluster Management）的运维 API。
+
+## 端点
+
+### POST `/v1/cluster/initialize`
+
+手动初始化本地集群或所有分片组。
+
+### POST `/v1/cluster/join`
+
+加入一个节点。
+
+请求体：
+
+```json
+{
+  "node_id": 2,
+  "address": "127.0.0.1:5002"
+}
+```
+
+### DELETE `/v1/cluster/nodes/:node_id`
+
+从集群中移除一个节点。
+
+## 说明
+
+- 在当前的单节点默认配置下，Raft 自动引导（Auto-bootstrap）已启用。新节点通常无需手动调用 `initialize` 即可变为可写状态。
+- 当你有意禁用了 `raft.auto_initialize`，或需要自行处理显式多节点引导流程时，使用 `POST /v1/cluster/initialize`。
+- 在多节点部署中，设置 `raft.bootstrap_seed_node_id` 以确保只有指定的种子节点自动初始化。
+- 在单节点模式下，join 和 leave 操作作用于本地 Raft 组。
+- 在分片模式（Sharded Mode）下，这些调用会扇出到各分片组。
+- 使用仪表盘的集群视图进行运维状态检查。

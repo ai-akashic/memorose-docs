@@ -1,0 +1,39 @@
+---
+title: 仪表盘
+description: 用于记忆检查、图谱探索和集群管理的运维 UI。
+---
+
+# 仪表盘（Dashboard）
+
+Memorose 内置了一个运维仪表盘，用于记忆检查、图谱探索和集群管理。
+
+## 访问地址
+
+- 仪表盘 UI：`http://127.0.0.1:3100/dashboard`
+
+## 登录
+
+公开登录端点：
+
+```http
+POST /v1/dashboard/auth/login
+```
+
+默认凭据为 `admin` / `admin`，除非你设置了 `DASHBOARD_ADMIN_PASSWORD`。
+
+<Warning>
+**Docker 部署：** 如果你通过自定义 `docker-compose.yml` 或 `docker run` 部署仪表盘，**必须**为仪表盘容器设置 `DASHBOARD_API_ORIGIN` 环境变量，使其指向后端 API（例如 `DASHBOARD_API_ORIGIN=http://memorose:3000`）。如果省略此配置，仪表盘将尝试在自身容器内向 `127.0.0.1` 代理登录请求，导致 `connect ECONNREFUSED 127.0.0.1:3000` 错误。
+</Warning>
+
+## 主要功能
+
+- 记忆浏览器
+- 图谱探索器
+- 搜索试验场
+- 语义遗忘/更新预览流程
+- 纠正审核队列
+- 集群状态
+- 智能体指标（Agent Metrics）
+- 组织管理
+- 组织知识视图
+- 运行时配置检查

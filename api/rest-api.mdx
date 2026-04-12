@@ -78,27 +78,6 @@ Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/hea
 | `POST` | `/v1/cluster/join` | Join node to cluster |
 | `DELETE` | `/v1/cluster/nodes/:node_id` | Remove node from cluster |
 
-### Dashboard API
-
-Dashboard routes are nested under `/v1/dashboard` and back the operational UI.
-
-Important routes include:
-
-- `/v1/dashboard/stats`
-- `/v1/dashboard/memories`
-- `/v1/dashboard/memories/:id`
-- `/v1/dashboard/graph`
-- `/v1/dashboard/search`
-- `/v1/dashboard/forget/preview`
-- `/v1/dashboard/forget/execute`
-- `/v1/dashboard/corrections/semantic/preview`
-- `/v1/dashboard/corrections/semantic/execute`
-- `/v1/dashboard/corrections/manual`
-- `/v1/dashboard/corrections/reviews`
-- `/v1/dashboard/agents`
-- `/v1/dashboard/cluster/status`
-- `/v1/dashboard/organizations`
-
 ## Integration Notes
 
 - `stream_id` is a UUID path parameter in the current model.

@@ -1,0 +1,145 @@
+---
+title: 开发环境搭建
+description: 从零开始搭建 Memorose 本地开发环境。
+---
+
+# 开发环境搭建
+
+## 前置条件
+
+| 工具 | 版本 | 备注 |
+| --- | --- | --- |
+| Rust | 1.88+ | 通过仓库根目录的 `rust-toolchain` 锁定 |
+| Node.js | 20+ | 用于仪表盘前端 |
+| pnpm | 最新版 | 仪表盘包管理器 |
+| protobuf-compiler | — | gRPC / Raft 传输层所需 |
+| cmake | — | 部分原生依赖所需 |
+| libclang-dev | — | `bindgen` 所需（仅 Linux） |
+
+### macOS
+
+```bash
+brew install protobuf cmake node
+npm i -g pnpm
+rustup install 1.88.0
+```
+
+### Ubuntu / Debian
+
+```bash
+sudo apt install -y protobuf-compiler cmake libclang-dev
+npm i -g pnpm
+rustup install 1.88.0
+```
+
+## 克隆与构建
+
+```bash
+git clone https://github.com/ai-akashic/Memorose.git
+cd Memorose
+cargo build
+```
+
+工作区包含四个 crate——`memorose-common`、`memorose-core`、`memorose-server` 和 `memorose-gateway`。直接运行 `cargo build` 即可编译全部。
+
+构建仪表盘前端：
+
+```bash
+cd dashboard
+pnpm install
+pnpm build
+```
+## 配置
+
+复制示例文件并填入你的 LLM API 密钥：
+
+```bash
+cp .env.example .env
+cp config.example.toml config.toml
+```
+
+至少在 `.env` 中设置以下其一：
+
+```bash
+# Gemini（默认）
+GOOGLE_API_KEY=your_key_here
+
+# 或 OpenAI
+# LLM_PROVIDER=openai
+# OPENAI_API_KEY=your_key_here
+```
+
+如需在开发中不使用真实 LLM 调用，可在 `config.toml` 中启用 mock 模式：
+
+```toml
+[development]
+use_mock_llm = true
+```
+
+## 本地运行
+
+### 单机模式（Standalone Mode）
+
+最快获得运行实例的方式：
+
+```bash
+./scripts/start_cluster.sh start --mode standalone
+```
+
+这将在端口 3000 启动一个服务器节点，仪表盘在端口 3100。
+
+### 集群模式（Cluster Mode，3 个本地节点）
+
+在一台机器上模拟 3 节点 Raft 集群：
+
+```bash
+./scripts/start_cluster.sh start --clean --build
+```
+
+### 其他命令
+
+```bash
+# 检查进程状态
+./scripts/start_cluster.sh status
+
+# 停止所有服务
+./scripts/start_cluster.sh stop
+
+# 使用全新数据重启
+./scripts/start_cluster.sh restart --clean
+```
+
+### 仪表盘开发服务器
+
+用于前端开发的热重载模式：
+
+```bash
+cd dashboard
+pnpm dev
+```
+
+## 端口
+
+| 服务 | 端口 | 备注 |
+| --- | --- | --- |
+| API（节点 1） | 3000 | 主服务器 |
+| API（节点 2） | 3001 | 仅集群模式 |
+| API（节点 3） | 3002 | 仅集群模式 |
+| Gateway | 8080 | 无状态请求路由 |
+| Dashboard | 3100 | Next.js 前端 |
+| Raft | 5001–5003 | 内部共识协议 |
+| Metrics | 9090 | Prometheus 端点 |
+
+## Docker
+
+提供了 `docker-compose.yml` 用于运行完整技术栈：
+
+```bash
+docker compose up
+```
+
+这将启动 Gateway、两个服务器节点和仪表盘。运行前请确保 `.env` 文件中包含所需的 API 密钥。
+
+<Note>
+在 Docker 中运行仪表盘时，请将 `DASHBOARD_API_ORIGIN` 设置为指向后端容器（例如 `http://memorose:3000`）。否则仪表盘会尝试在自己的容器内访问 `127.0.0.1:3000` 而导致失败。
+</Note>

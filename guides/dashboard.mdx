@@ -5,13 +5,11 @@ description: The operational UI for memory inspection, graph exploration, and cl
 
 # Dashboard
 
-Memorose ships with a separate dashboard UI plus authenticated dashboard API routes under `/v1/dashboard`.
+Memorose ships with a built-in operational dashboard for memory inspection, graph exploration, and cluster management.
 
-## URLs
+## URL
 
-- Local dashboard UI: `http://127.0.0.1:3100/dashboard`
-- Backend API: `http://127.0.0.1:3000/v1/dashboard`
-- Backend redirect: `http://127.0.0.1:3000/dashboard`
+- Dashboard UI: `http://127.0.0.1:3100/dashboard`
 
 ## Login
 
@@ -40,26 +38,3 @@ Default credentials are `admin` / `admin` unless you set `DASHBOARD_ADMIN_PASSWO
 - organization knowledge views
 - runtime config inspection
 
-## Important API Routes
-
-- `POST /v1/dashboard/auth/login`
-- `POST /v1/dashboard/auth/password`
-- `GET /v1/dashboard/stats`
-- `GET /v1/dashboard/memories`
-- `GET /v1/dashboard/memories/:id`
-- `GET /v1/dashboard/graph`
-- `POST /v1/dashboard/search`
-- `POST /v1/dashboard/chat`
-- `POST /v1/dashboard/forget/preview`
-- `POST /v1/dashboard/forget/execute`
-- `POST /v1/dashboard/corrections/semantic/preview`
-- `POST /v1/dashboard/corrections/semantic/execute`
-- `POST /v1/dashboard/corrections/manual`
-- `GET /v1/dashboard/corrections/reviews`
-- `GET /v1/dashboard/config`
-- `GET /v1/dashboard/agents`
-- `GET /v1/dashboard/cluster/status`
-- `GET /v1/dashboard/organizations`
-- `POST /v1/dashboard/organizations`
-
-The dashboard API is not a separate product line. It is the operational UI for the same runtime.

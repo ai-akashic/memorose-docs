@@ -1,0 +1,29 @@
+---
+title: Node.js
+description: Node.js / TypeScript 的轻量 HTTP 客户端模式。
+---
+
+# Node.js
+
+当前 `v1` 运行时（runtime）没有在此发布稳定的 Node.js SDK。
+
+请使用轻量 HTTP 客户端代替。
+
+```ts
+const response = await fetch(
+  "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: "What does Dylan prefer?",
+      limit: 5,
+    }),
+  },
+);
+
+console.log(await response.json());
+```

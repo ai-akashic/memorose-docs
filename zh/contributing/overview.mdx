@@ -1,0 +1,93 @@
+---
+title: 贡献指南
+description: 为 Memorose 贡献代码、文档和错误报告的指南。
+---
+
+# 贡献指南
+
+我们欢迎各种形式的贡献——错误修复、新功能、文档改进和测试覆盖。
+
+## 快速开始
+
+<Steps>
+  <Step title="Fork 并克隆">
+    在 GitHub 上 Fork 仓库，然后将你的 Fork 克隆到本地。
+  </Step>
+  <Step title="配置开发环境">
+    按照[开发环境搭建](/zh/contributing/dev-setup)指南安装依赖并配置本地环境。
+  </Step>
+  <Step title="创建分支">
+    从 `main` 创建功能分支（feature branch）：
+    ```bash
+    git checkout -b feat/your-feature-name
+    ```
+  </Step>
+  <Step title="修改代码并测试">
+    编写代码，然后运行测试套件。详见[测试指南](/zh/contributing/testing)。
+    ```bash
+    cargo test
+    ```
+  </Step>
+  <Step title="提交 Pull Request">
+    推送你的分支并向 `main` 发起 PR。
+  </Step>
+</Steps>
+
+## 分支命名
+
+| 前缀 | 用途 |
+| --- | --- |
+| `feat/` | 新功能 |
+| `fix/` | 错误修复 |
+| `refactor/` | 不改变行为的代码重构 |
+| `docs/` | 仅文档变更 |
+| `test/` | 添加或改进测试 |
+
+## 提交信息
+
+使用简洁的祈使语气（imperative mood）：
+
+```text
+feat: add semantic dedup to L1 consolidation
+fix: prevent panic on empty embedding batch
+docs: add testing guide for contributors
+```
+
+## 代码风格
+
+### Rust
+
+- 提交前运行 `cargo fmt`
+- 运行 `cargo clippy` 并解决所有警告
+- 遵循代码库中的现有模式——如有疑问，参考相邻代码
+
+### TypeScript（Dashboard）
+
+- 在 `dashboard/` 目录下运行 `pnpm lint`
+- 数据获取使用现有的 SWR + `fetchAPI()` 模式
+
+## Pull Request 指南
+
+- 保持 PR 聚焦——每个 PR 只包含一个逻辑变更
+- 包含清晰的描述，说明改了什么以及为什么
+- 为任何行为变更添加或更新测试
+- 如果你的变更影响了 API 接口，请更新相关文档
+
+## 报告 Bug
+
+在 GitHub 上创建 Issue，包含以下信息：
+- 复现步骤
+- 预期行为与实际行为
+- Memorose 版本和环境详情（操作系统、Rust 版本、LLM 提供商）
+
+## 文档贡献
+
+文档位于 `memorose-docs/` 仓库，使用 [Mintlify](https://mintlify.com) 构建。
+
+```bash
+npm i -g mint
+cd memorose-docs
+mint dev
+```
+
+在 `http://localhost:3000` 预览你的更改。

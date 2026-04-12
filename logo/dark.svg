@@ -4,12 +4,12 @@
     <path id="outerPetal" d="M50 50C44 43 40 36 39 28C38 23 40 18 43 16C46 14 49 15 50 18C51 15 54 14 57 16C60 18 62 23 61 28C60 36 56 43 50 50Z"/>
     <path id="innerPetal" d="M50 50C46 45 44 40 43 36C43 33 44 30 47 29C48 28 49 28 50 30C51 28 52 28 53 29C56 30 57 33 57 36C56 40 54 45 50 50Z"/>
     <linearGradient id="outerFill" x1="50" y1="16" x2="50" y2="50" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E6B8AA"/>
-      <stop offset="1" stop-color="#C97865"/>
+      <stop offset="0" stop-color="#9CA3AF"/>
+      <stop offset="1" stop-color="#6B7280"/>
     </linearGradient>
     <linearGradient id="innerFill" x1="50" y1="28" x2="50" y2="50" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F4DDD2"/>
-      <stop offset="1" stop-color="#D9A08D"/>
+      <stop offset="0" stop-color="#D1D5DB"/>
+      <stop offset="1" stop-color="#9CA3AF"/>
     </linearGradient>
   </defs>
   <!-- Rose icon centered at (60, 60) -->
@@ -28,10 +28,10 @@
       <use href="#innerPetal" transform="rotate(252 50 50)"/>
       <use href="#innerPetal" transform="rotate(324 50 50)"/>
     </g>
-    <circle cx="50" cy="50" r="5.5" fill="#9CA3AF"/>
+    <circle cx="50" cy="50" r="5.5" fill="#4B5563"/>
   </g>
   <!-- "Memorose" text -->
-  <text x="130" y="72" font-family="'Georgia', 'Times New Roman', serif" font-size="42" font-weight="700" letter-spacing="1" fill="#F3F4F6">
-    <tspan fill="#F3F4F6">Memo</tspan><tspan fill="#E6B8AA">rose</tspan>
+  <text x="125" y="75" font-family="'Georgia', 'Times New Roman', serif" font-size="52" font-weight="700" letter-spacing="1" fill="#F3F4F6">
+    <tspan fill="#F3F4F6">Memo</tspan><tspan fill="#9CA3AF">rose</tspan>
   </text>
 </svg>

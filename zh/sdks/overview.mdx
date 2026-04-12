@@ -1,0 +1,34 @@
+---
+title: SDK 状态
+description: 当前 SDK 可用性及推荐的 HTTP 优先方案。
+---
+
+# SDK 状态
+
+当前 Memorose 运行时（runtime）已超前于旧版 SDK 文档。
+
+## 当前建议
+
+如果你需要与线上服务器保持一致，请使用本文档集中记录的 HTTP API。
+
+## 为什么保留此章节
+
+旧版文档描述的客户端库围绕以下操作：
+
+- `add memory`
+- `search memories`
+- `delete memory`
+- 通用的 `localhost:8000` CRUD 流程
+
+该模型与当前运行时不匹配，当前运行时以以下功能为核心：
+
+- 流作用域事件（stream-scoped events）
+- 混合检索（hybrid retrieval）
+- 任务树（task trees）
+- 组织知识（organization knowledge）
+- 集群操作（cluster operations）
+
+## 当前状况
+
+- 目前没有针对当前运行时形态发布稳定且完整文档的官方 SDK。
+- 下方的语言页面展示了你现在可以使用的轻量封装模式（thin-wrapper patterns）。

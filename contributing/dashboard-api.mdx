@@ -1,0 +1,62 @@
+---
+title: Dashboard API
+description: Internal API routes that power the Memorose dashboard UI.
+---
+
+# Dashboard API
+
+Dashboard routes are nested under `/v1/dashboard` and back the operational UI. These are internal endpoints — end users interact with the dashboard UI directly.
+
+## Authentication
+
+```http
+POST /v1/dashboard/auth/login
+```
+
+Default credentials are `admin` / `admin` unless you set `DASHBOARD_ADMIN_PASSWORD`.
+
+## Routes
+
+### Auth
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/v1/dashboard/auth/login` | Get dashboard JWT token |
+| `POST` | `/v1/dashboard/auth/password` | Change dashboard password |
+
+### Stats & Memories
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/dashboard/stats` | Global system statistics |
+| `GET` | `/v1/dashboard/memories` | List memory units |
+| `GET` | `/v1/dashboard/memories/:id` | Get details for a specific memory |
+
+### Graph & Search
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/dashboard/graph` | Fetch graph data for exploration |
+| `POST` | `/v1/dashboard/search` | Search playground endpoint |
+| `POST` | `/v1/dashboard/chat` | Chat / query playground |
+
+### Forgetting & Corrections
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/v1/dashboard/forget/preview` | Preview a semantic forgetting plan |
+| `POST` | `/v1/dashboard/forget/execute` | Execute the forgetting plan |
+| `POST` | `/v1/dashboard/corrections/semantic/preview` | Preview semantic corrections |
+| `POST` | `/v1/dashboard/corrections/semantic/execute` | Execute semantic corrections |
+| `POST` | `/v1/dashboard/corrections/manual` | Manual correction |
+| `GET` | `/v1/dashboard/corrections/reviews` | Get the review queue |
+
+### Operations
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/dashboard/config` | Inspect runtime configuration |
+| `GET` | `/v1/dashboard/agents` | Monitor agent metrics |
+| `GET` | `/v1/dashboard/cluster/status` | Check cluster health and nodes |
+| `GET` | `/v1/dashboard/organizations` | List managed organizations |
+| `POST` | `/v1/dashboard/organizations` | Create organization |

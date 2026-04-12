@@ -9,68 +9,174 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "language": "en",
+        "default": true,
+        "tabs": [
           {
-            "group": "Getting Started",
-            "pages": [
-              "introduction",
-              "getting-started/installation",
-              "getting-started/quickstart",
-              "getting-started/configuration"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "introduction",
+                  "getting-started/installation",
+                  "getting-started/quickstart",
+                  "getting-started/configuration"
+                ]
+              },
+              {
+                "group": "Architecture",
+                "pages": [
+                  "architecture/overview",
+                  "architecture/memory-hierarchy",
+                  "architecture/memory-scopes",
+                  "architecture/storage-engines",
+                  "architecture/forgetting-strategies"
+                ]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "guides/basic-operations",
+                  "guides/hybrid-search",
+                  "guides/tasks-and-goals",
+                  "guides/organization-knowledge",
+                  "guides/knowledge-graph",
+                  "guides/dashboard",
+                  "guides/distributed-deployment",
+                  "guides/multimodal-ingest",
+                  "guides/benchmarks"
+                ]
+              },
+              {
+                "group": "SDKs",
+                "pages": [
+                  "sdks/overview",
+                  "sdks/python",
+                  "sdks/node",
+                  "sdks/java",
+                  "sdks/go"
+                ]
+              }
             ]
           },
           {
-            "group": "Architecture",
-            "pages": [
-              "architecture/overview",
-              "architecture/memory-hierarchy",
-              "architecture/memory-scopes",
-              "architecture/storage-engines",
-              "architecture/forgetting-strategies"
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "API Reference",
+                "pages": [
+                  "api/rest-api",
+                  "api/events",
+                  "api/retrieve",
+                  "api/tasks",
+                  "api/organization-knowledge",
+                  "api/graph",
+                  "api/cluster"
+                ]
+              }
             ]
           },
           {
-            "group": "Guides",
-            "pages": [
-              "guides/basic-operations",
-              "guides/hybrid-search",
-              "guides/tasks-and-goals",
-              "guides/organization-knowledge",
-              "guides/knowledge-graph",
-              "guides/dashboard",
-              "guides/distributed-deployment",
-              "guides/multimodal-ingest",
-              "guides/benchmarks"
-            ]
-          },
-          {
-            "group": "SDKs",
-            "pages": [
-              "sdks/overview",
-              "sdks/python",
-              "sdks/node",
-              "sdks/java",
-              "sdks/go"
+            "tab": "Contributing",
+            "groups": [
+              {
+                "group": "Contributing",
+                "pages": [
+                  "contributing/overview",
+                  "contributing/dev-setup",
+                  "contributing/codebase-guide",
+                  "contributing/testing",
+                  "contributing/dashboard-api"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
+        "language": "zh",
+        "tabs": [
           {
-            "group": "API Reference",
-            "pages": [
-              "api/rest-api",
-              "api/events",
-              "api/retrieve",
-              "api/tasks",
-              "api/organization-knowledge",
-              "api/graph",
-              "api/cluster"
+            "tab": "文档",
+            "groups": [
+              {
+                "group": "快速开始",
+                "pages": [
+                  "zh/introduction",
+                  "zh/getting-started/installation",
+                  "zh/getting-started/quickstart",
+                  "zh/getting-started/configuration"
+                ]
+              },
+              {
+                "group": "架构",
+                "pages": [
+                  "zh/architecture/overview",
+                  "zh/architecture/memory-hierarchy",
+                  "zh/architecture/memory-scopes",
+                  "zh/architecture/storage-engines",
+                  "zh/architecture/forgetting-strategies"
+                ]
+              },
+              {
+                "group": "指南",
+                "pages": [
+                  "zh/guides/basic-operations",
+                  "zh/guides/hybrid-search",
+                  "zh/guides/tasks-and-goals",
+                  "zh/guides/organization-knowledge",
+                  "zh/guides/knowledge-graph",
+                  "zh/guides/dashboard",
+                  "zh/guides/distributed-deployment",
+                  "zh/guides/multimodal-ingest",
+                  "zh/guides/benchmarks"
+                ]
+              },
+              {
+                "group": "SDK",
+                "pages": [
+                  "zh/sdks/overview",
+                  "zh/sdks/python",
+                  "zh/sdks/node",
+                  "zh/sdks/java",
+                  "zh/sdks/go"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "API 参考",
+            "groups": [
+              {
+                "group": "API 参考",
+                "pages": [
+                  "zh/api/rest-api",
+                  "zh/api/events",
+                  "zh/api/retrieve",
+                  "zh/api/tasks",
+                  "zh/api/organization-knowledge",
+                  "zh/api/graph",
+                  "zh/api/cluster"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "贡献指南",
+            "groups": [
+              {
+                "group": "贡献指南",
+                "pages": [
+                  "zh/contributing/overview",
+                  "zh/contributing/dev-setup",
+                  "zh/contributing/codebase-guide",
+                  "zh/contributing/testing",
+                  "zh/contributing/dashboard-api"
+                ]
+              }
             ]
           }
         ]

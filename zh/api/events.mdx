@@ -1,0 +1,74 @@
+---
+title: 事件 API
+description: 将原始 L0 事件存入记忆流。
+---
+
+# 事件 API（Events API）
+
+## POST `/v1/users/:user_id/streams/:stream_id/events`
+
+将原始事件存入 L0 事件流（Event Stream）。
+
+## 此路由的用途
+
+当你需要在 Memorose 将源材料转化为持久记忆之前，先将其追加写入时，使用此路由。
+
+典型用途：
+
+- 对话轮次
+- 工具输出
+- 结构化 JSON 载荷
+- 图像、音频或视频引用
+- 任务相关的执行事件
+
+## 请求
+
+```http
+POST /v1/users/dylan/streams/11111111-1111-1111-1111-111111111111/events
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "org_id": "default",
+  "content": "Dylan prefers dark terminals and concise updates.",
+  "content_type": "text",
+  "level": 1,
+  "parent_id": "22222222-2222-2222-2222-222222222222",
+  "task_status": "InProgress",
+  "task_progress": 0.6
+}
+```
+
+## 请求字段
+
+| Field | Type | Required | 描述 |
+| --- | --- | --- | --- |
+| `content` | string | Yes | 事件载荷 |
+| `content_type` | string | No | `text`、`image`、`audio`、`video` 或 `json` |
+| `org_id` | string | No | 组织范围 |
+| `level` | number | No | 存储在元数据中的目标层级提示 |
+| `parent_id` | string | No | 存储在元数据中的父对象引用 |
+| `task_status` | string | No | 存储在元数据中的任务状态提示 |
+| `task_progress` | number | No | 存储在元数据中的任务进度提示 |
+
+## 响应
+
+```json
+{
+  "status": "accepted",
+  "event_id": "9db1d859-0a32-4c33-8b94-8cab9f8e0d16"
+}
+```
+
+## 实用说明
+
+- `stream_id` 是 UUID 路径参数。
+- 当 `content_type` 为 `"json"` 时，`content` 必须是 JSON 字符串载荷。
+- 此路由追加写入 `L0`；持久化的 `L1` 或 `L2` 记忆将在后续的整合（Consolidation）和反思（Reflection）过程中生成。
+- 写入请求发送到当前 Leader 节点。非 Leader 节点会在可能时转发写入。
+
+## 相关页面
+
+- [快速开始](/zh/getting-started/quickstart)
+- [检索 API](/zh/api/retrieve)
+- [多模态写入指南](/zh/guides/multimodal-ingest)

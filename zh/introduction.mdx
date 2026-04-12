@@ -1,0 +1,129 @@
+---
+title: 简介
+description: Memorose 是一个面向智能体的记忆运行时（Memory Runtime），支持分层记忆、共享组织知识、任务管理、多模态摄入以及基于 Raft 的部署。
+---
+
+# Memorose
+
+Memorose 将原始的智能体（Agent）流量转化为可持续积累的记忆。
+
+它摄入事件、整合事实与流程、在执行前预览语义更新（Semantic Update）或遗忘操作、投射共享的组织知识（Organization Knowledge）、跟踪目标与任务，并通过真实的仪表盘（Dashboard）和基于 Raft 的部署模型保持整个运行时的可运维性。
+
+<CardGroup cols={3}>
+  <Card title="从快速开始入手" icon="rocket" href="/zh/getting-started/quickstart">
+    登录、创建流、摄入事件、检索记忆。
+  </Card>
+  <Card title="阅读 API 文档" icon="rectangle-terminal" href="/zh/api/rest-api">
+    查看以流为核心的 HTTP 接口。
+  </Card>
+  <Card title="理解模型" icon="sitemap" href="/zh/architecture/overview">
+    L0-L3 层级结构、领域与运行时管线。
+  </Card>
+</CardGroup>
+
+## 运行时全景
+
+<Steps>
+  <Step title="L0 — 原始事件">
+    文本、图像、音频、视频和 JSON 以流作用域事件的形式进入系统。
+  </Step>
+  <Step title="L1 — 稳定记忆">
+    事实、偏好、流程痕迹和有依据的摘要。
+  </Step>
+  <Step title="L2 — 洞察">
+    主题、图关联聚类和共享组织知识。
+  </Step>
+  <Step title="L3 — 目标与任务">
+    里程碑、依赖关系、进度、执行状态和沉淀结果。
+  </Step>
+</Steps>
+
+## API 概览
+
+```
+POST /v1/users/:uid/streams/:sid/retrieve
+```
+
+请求字段：`query`、`graph_depth`、`org_id`、`agent_id`、`image / audio / video`
+
+<Note>
+本文档集遵循 `memorose-server` 中实现的真实服务器模型，而非旧版 CRUD 风格的记忆 API。
+</Note>
+
+## 三大核心层面
+
+<CardGroup cols={3}>
+  <Card title="记忆运行时" icon="brain">
+    流、分层记忆、混合检索（Hybrid Retrieval）、语义更新流程和主动遗忘。
+  </Card>
+  <Card title="执行层" icon="list-check">
+    任务树、就绪队列、里程碑、依赖关系和结果沉淀。
+  </Card>
+  <Card title="运维层面" icon="gauge">
+    仪表盘认证、集群控制、组织知识和运行时检查。
+  </Card>
+</CardGroup>
+
+## 以流为核心的 HTTP 接口
+
+当前 API 以 `user_id` 和 `stream_id` 为作用域，并连接到任务、图边、组织知识和集群操作。
+
+- `/events` 用于原始摄入
+- `/retrieve` 用于混合召回
+- `/memories/semantic/preview` 和 `/memories/semantic/execute` 用于语义更新和遗忘工作流
+- `/tasks/tree` 和 `/tasks/ready` 用于 L3 执行状态
+- `/organizations/:org_id/knowledge` 用于共享知识
+
+## 跟随运行时流程
+
+<Steps>
+  <Step title="将事件摄入流中">
+    一切从 L0 输入开始，附加到具体的用户和流时间线上。
+  </Step>
+  <Step title="整合为持久记忆">
+    事实和流程痕迹成为稳定的记忆单元，而非永远停留在原始流量阶段。
+  </Step>
+  <Step title="使用多种信号进行检索">
+    混合检索结合了向量搜索（Vector Search）、文本搜索（Text Search）、图深度、时间过滤器和共享组织知识。
+  </Step>
+  <Step title="审查记忆变更并跟踪执行">
+    语义更新/遗忘预览加上 L3 目标、里程碑、依赖关系和完成摘要，将记忆转变为执行层面而非被动存档。
+  </Step>
+</Steps>
+
+## 按需选择
+
+<CardGroup cols={3}>
+  <Card title="构建" icon="code" href="/zh/getting-started/quickstart">
+    **我需要将摄入和检索接入智能体。**
+
+    从快速开始、REST API 和混合搜索入手。
+  </Card>
+  <Card title="运维" icon="server" href="/zh/guides/dashboard">
+    **我需要检查记忆、任务、知识和集群健康状态。**
+
+    查看仪表盘、组织知识和分布式部署。
+  </Card>
+  <Card title="理解" icon="lightbulb" href="/zh/architecture/overview">
+    **我需要在设计封装或产品行为之前理解模型。**
+
+    阅读架构、记忆层级、记忆领域和遗忘策略。
+  </Card>
+</CardGroup>
+
+## 从这里开始
+
+<CardGroup cols={2}>
+  <Card title="快速开始" icon="bolt" href="/zh/getting-started/quickstart">
+    登录、创建流、摄入事件、检索记忆。使用当前认证和响应模型的真实 `v1` 路由。
+  </Card>
+  <Card title="架构" icon="sitemap" href="/zh/architecture/overview">
+    理解 L0-L3、领域和运行时管线。在围绕错误的抽象构建封装之前，先阅读模型。
+  </Card>
+  <Card title="任务" icon="list-check" href="/zh/guides/tasks-and-goals">
+    了解目标和执行状态如何在 L3 中暴露。任务树和就绪队列是产品的一部分，而非内部细节。
+  </Card>
+  <Card title="组织知识" icon="building" href="/zh/guides/organization-knowledge">
+    检查某个 `org_id` 的共享记忆层。当个人记忆需要演变为可复用的组织知识时使用。
+  </Card>
+</CardGroup>

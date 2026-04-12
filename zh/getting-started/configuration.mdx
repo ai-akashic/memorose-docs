@@ -1,0 +1,114 @@
+---
+title: 配置
+description: 配置 Memorose 运行时、存储和部署行为。
+---
+
+# 配置
+
+Memorose 从 `config.toml` 和环境变量读取配置。当前的配置范围比早期文档版本更广，应被视为基础设施配置（Infrastructure Configuration），而不仅仅是存储调优。
+
+## 主要文件
+
+- `config.toml`：运行时和存储行为
+- `.env`：提供商密钥和环境特定覆盖
+- `.env.example`：当前环境变量参考
+- `config.example.toml`：当前配置结构参考
+
+## 当前顶层配置段
+
+```toml
+[server]
+[database]
+[database.rocksdb]
+[database.lance]
+[database.tantivy]
+[consolidation]
+[consolidation.llm]
+[forgetting]
+[graph]
+[raft]
+[cache]
+[multimodal]
+[security]
+[telemetry]
+[development]
+```
+
+## 最小示例
+
+```toml
+[server]
+host = "0.0.0.0"
+port = 3000
+
+[database]
+data_dir = "./data"
+wal_sync_mode = "normal"
+
+[consolidation]
+enabled = true
+interval_secs = 10
+batch_size = 100
+entropy_threshold = 2.5
+similarity_threshold = 0.7
+
+[consolidation.llm]
+provider = "gemini"
+model = "gemini-3.1-flash-lite-preview"
+embedding_model = "gemini-embedding-2-preview"
+max_retries = 3
+timeout_secs = 30
+temperature = 0.3
+
+[forgetting]
+enabled = true
+decay_half_life_days = 30
+min_importance = 0.1
+prune_interval_secs = 3600
+
+[graph]
+auto_link_threshold = 0.7
+max_edges_per_node = 100
+enable_page_rank = true
+enable_community_detection = true
+
+[raft]
+node_id = "node1"
+raft_addr = "127.0.0.1:5001"
+```
+
+## 环境变量
+
+`.env.example` 中的常用环境变量：
+
+```bash
+LLM_PROVIDER=gemini
+GOOGLE_API_KEY=your_google_api_key_here
+LLM_MODEL=gemini-3.1-flash-lite-preview
+EMBEDDING_MODEL=gemini-embedding-2-preview
+MEMOROSE_WORKER__CONSOLIDATION_INTERVAL_MS=1000
+MEMOROSE_WORKER__LLM_CONCURRENCY=5
+MEMOROSE_WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
+```
+
+使用 `DASHBOARD_ADMIN_PASSWORD` 替换默认的仪表盘密码。
+
+## 各配置段说明
+
+- `[server]`：绑定地址、端口、工作线程数
+- `[database]`：磁盘布局和引擎特定调优
+- `[consolidation]`：L0 到 L1 的提取节奏和接受阈值
+- `[forgetting]`：低价值记忆的衰减（Decay）和修剪（Pruning）
+- `[graph]`：自动关联和社区检测（Community Detection）
+- `[raft]`：集群、选举时序、成员管理、快照
+- `[cache]`：缓存查询行为
+- `[multimodal]`：图像、音频和视频处理开关
+- `[security]`：认证和速率限制（Rate Limiting）
+- `[telemetry]`：日志、指标、链路追踪（Tracing）
+- `[development]`：模拟 LLM、调试设置、测试确定性
+
+## 指导建议
+
+- 使用 `config.example.toml` 作为权威模板。
+- 使用 `.env.example` 作为提供商和工作线程覆盖的权威参考。
+- 避免使用提及 `[storage]`、`[dashboard]` 或 `/health` 的旧文档示例；这些反映的是之前的 API/配置模型。

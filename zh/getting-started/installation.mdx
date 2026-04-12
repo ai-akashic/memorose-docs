@@ -1,0 +1,110 @@
+---
+title: 安装
+description: 安装并配置本地 Memorose 实例。
+---
+
+# 安装
+
+Memorose 通常作为一个 Rust 服务加上一个独立的仪表盘（Dashboard）UI 运行。
+
+## 前置条件
+
+- Rust 工具链（Toolchain）
+- 用于整合和嵌入的 LLM 提供商密钥
+- 可选：`jq`，用于本文档集中的命令行示例
+
+## 克隆仓库
+
+```bash
+git clone https://github.com/ai-akashic/Memorose.git
+cd Memorose
+```
+
+## 环境配置
+
+复制示例环境文件并填入你的提供商设置。
+
+```bash
+cp .env.example .env
+```
+
+至少需要配置：
+
+```bash
+LLM_PROVIDER=gemini
+GOOGLE_API_KEY=your_google_api_key_here
+LLM_MODEL=gemini-3.1-flash-lite-preview
+EMBEDDING_MODEL=gemini-embedding-2-preview
+```
+
+如果你想避免默认仪表盘密码警告，还需设置：
+
+```bash
+DASHBOARD_ADMIN_PASSWORD=change-me
+```
+
+## 配置
+
+从附带的示例开始：
+
+```bash
+cp config.example.toml config.toml
+```
+
+当前配置结构围绕以下部分组织：
+
+- `[server]`
+- `[database]`
+- `[consolidation]`
+- `[forgetting]`
+- `[graph]`
+- `[raft]`
+- `[cache]`
+- `[multimodal]`
+- `[security]`
+- `[telemetry]`
+- `[development]`
+
+## 启动服务栈
+
+推荐的本地启动方式：
+
+```bash
+./scripts/start_cluster.sh start --clean --build
+```
+
+这将在 `3000` 端口及相关集群端口启动后端节点，并在 `3100` 端口启动仪表盘 UI。
+
+## 手动启动服务器
+
+如果你只需要 API 服务器：
+
+```bash
+cargo run --release -p memorose-server
+```
+
+## 验证安装
+
+检查根端点：
+
+```bash
+curl http://127.0.0.1:3000/
+```
+
+预期响应：
+
+```text
+Memorose is running.
+```
+
+## 仪表盘
+
+- 仪表盘 UI：`http://127.0.0.1:3100/dashboard`
+- API 重定向：`http://127.0.0.1:3000/dashboard`
+- 默认登录凭据：`admin` / `admin`
+
+首次使用时请更改密码，或在启动前设置 `DASHBOARD_ADMIN_PASSWORD`。
+
+<Warning>
+**Docker 部署：** 如果你使用自己的 `docker-compose.yml` 或 `docker run` 部署仪表盘，你**必须**在仪表盘容器上设置 `DASHBOARD_API_ORIGIN` 环境变量，使其指向你的后端服务（例如 `DASHBOARD_API_ORIGIN=http://memorose:3000`）。否则 API 请求将无法到达后端，你会在登录时遇到 `connect ECONNREFUSED 127.0.0.1:3000` 错误。
+</Warning>

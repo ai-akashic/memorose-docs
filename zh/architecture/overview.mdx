@@ -1,13 +1,13 @@
 ---
-title: Architectural Overview
-description: Workspace shape, runtime pipeline, key concepts, and deployment model.
+title: 架构概览
+description: 工作区结构、运行时管道（Runtime Pipeline）、核心概念与部署模型。
 ---
 
-# Architecture Overview
+# 架构概览
 
-Memorose is a memory runtime for agents. The system ingests raw events, consolidates them into durable memory, derives higher-order insights, tracks goal execution, and exposes all of that through a Rust server, a dashboard, and Raft-backed deployment primitives.
+Memorose 是一个面向智能体（Agent）的记忆运行时（Memory Runtime）。系统接收原始事件，将其整合为持久化记忆，推导出高阶洞察（Insight），追踪目标执行状态，并通过 Rust 服务端、仪表盘（Dashboard）和基于 Raft 的部署原语对外暴露所有能力。
 
-## System Architecture
+## 系统架构
 
 ```mermaid
 graph TB
@@ -76,7 +76,7 @@ graph TB
   style Cluster fill:#f3f4f6,stroke:#9ca3af,color:#111827
 ```
 
-## Data Flow
+## 数据流
 
 ```mermaid
 graph LR
@@ -104,7 +104,7 @@ graph LR
   style Gone fill:#ffffff,stroke:#d1d5db,color:#9ca3af
 ```
 
-## Workspace Shape
+## 工作区结构
 
 ```text
 crates/
@@ -113,64 +113,64 @@ crates/
 └── memorose-server    # Axum API, dashboard auth, management routes
 ```
 
-## Runtime Pipeline
+## 运行时管道
 
-1. Events arrive on `/v1/users/:user_id/streams/:stream_id/events`
-2. L0 raw events are stored and queued for consolidation
-3. Consolidation produces L1 memory units
-4. Reflection and graph/community analysis produce L2 insights
-5. L3 goal and task memory coordinates future work and execution state
-6. Retrieval merges vector, text, graph, and shared-knowledge signals
-7. Forgetting prunes or compacts low-value memory over time
+1. 事件通过 `/v1/users/:user_id/streams/:stream_id/events` 到达
+2. L0 原始事件被存储并排入整合（Consolidation）队列
+3. 整合过程生成 L1 记忆单元（Memory Unit）
+4. 反思（Reflection）与图/社区分析生成 L2 洞察
+5. L3 目标与任务记忆协调后续工作和执行状态
+6. 检索（Retrieval）融合向量、文本、图谱和共享知识信号
+7. 遗忘（Forgetting）随时间修剪或压缩低价值记忆
 
-## Key Product Concepts
+## 核心产品概念
 
 ### L0-L3
 
-Memorose uses an explicit memory hierarchy:
+Memorose 使用显式的记忆层级（Memory Hierarchy）：
 
-- `L0`: raw event stream
-- `L1`: stable facts and procedural traces
-- `L2`: themes, clusters, reflective summaries, and shared insights
-- `L3`: goal structures, task trees, milestones, dependencies, and execution status
+- `L0`：原始事件流（Raw Event Stream）
+- `L1`：稳定的事实与过程性痕迹（Procedural Traces）
+- `L2`：主题、聚类、反思性摘要与共享洞察
+- `L3`：目标结构、任务树、里程碑、依赖关系与执行状态
 
-### Domains
+### 领域
 
-The ownership and sharing model is:
+所有权与共享模型如下：
 
-- `agent`: how a specific agent learns to operate
-- `user`: who the user is and what they prefer
-- `organization`: reusable shared knowledge projected from authorized source memory
+- `agent`：特定智能体如何学习操作
+- `user`：用户是谁以及他们的偏好
+- `organization`：从授权源记忆中投射出的可复用共享知识
 
-### Streams
+### 流（Streams）
 
-Every ingest and retrieval request is scoped to a `stream_id`. Streams preserve session-local chronology while still feeding long-lived memory.
+每个摄入和检索请求都限定在一个 `stream_id` 范围内。流保留会话级别的时间顺序，同时仍然为长期记忆提供数据。
 
-## Storage Model
+## 存储模型
 
-Memorose combines several storage engines instead of pushing everything into one system:
+Memorose 组合了多个存储引擎（Storage Engine），而非将所有内容推入单一系统：
 
-- RocksDB for local durable state and key-value access
-- Lance for embeddings and vector retrieval
-- Tantivy for text retrieval
-- Graph and organization-knowledge views built on top of those primitives
+- RocksDB 用于本地持久化状态和键值访问
+- Lance 用于嵌入向量（Embedding）和向量检索
+- Tantivy 用于文本检索
+- 图谱（Graph）和组织知识视图构建在上述原语之上
 
-## Retrieval Model
+## 检索模型
 
-Retrieval is hybrid by design. Queries can combine:
+检索在设计上就是混合的（Hybrid）。查询可以组合：
 
-- semantic similarity
-- text search
-- graph depth expansion
-- time filters
-- organization knowledge
-- optional multimodal embedding input
+- 语义相似度（Semantic Similarity）
+- 文本搜索
+- 图谱深度扩展
+- 时间过滤
+- 组织知识
+- 可选的多模态嵌入输入（Multimodal Embedding）
 
-## Deployment Model
+## 部署模型
 
-- Single-node mode for local development
-- Raft-based clustering for replicated deployment
-- Sharded topologies for larger installations
-- Separate dashboard UI on port `3100`
+- 单节点模式用于本地开发
+- 基于 Raft 的集群用于复制部署
+- 分片拓扑（Sharded Topologies）用于更大规模的安装
+- 独立的仪表盘 UI 运行在端口 `3100`
 
-This is infrastructure software first. The docs should be read with that model in mind.
+这首先是基础设施软件。文档应以此模型为前提来阅读。

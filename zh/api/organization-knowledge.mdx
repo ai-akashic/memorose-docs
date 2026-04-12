@@ -1,0 +1,56 @@
+---
+title: 组织知识 API
+description: 组织范围共享记忆读模型端点。
+---
+
+# 组织知识 API（Organization Knowledge API）
+
+组织知识（Organization Knowledge）是面向单个组织的共享记忆读模型。
+
+## 此路由组的用途
+
+当记忆需要在同一 `org_id` 下的多个用户或 Agent 之间复用时，使用此 API。
+
+此层适用于：
+
+- 共享策略
+- 术语定义
+- 可复用工作流
+- 通用最佳实践
+- 组织级洞察汇总
+
+## 端点
+
+| Method | Endpoint | 用途 |
+| --- | --- | --- |
+| `GET` | `/v1/organizations/:org_id/knowledge` | 列出组织知识条目 |
+| `GET` | `/v1/organizations/:org_id/knowledge/:id` | 按 UUID 获取单条知识条目 |
+| `GET` | `/v1/organizations/:org_id/knowledge/metrics` | 获取组织知识指标和汇总 |
+
+## 列表查询参数
+
+| Parameter | 含义 |
+| --- | --- |
+| `q` | 对内容或关键词进行全文匹配 |
+| `contributor` | 按贡献用户过滤 |
+| `source_type` | 按来源记忆类型过滤 |
+| `sort` | 排序模式，如 `published_desc`、`contributions_desc`、`active_desc` 或 `topic_asc` |
+
+## 示例
+
+```http
+GET /v1/organizations/default/knowledge?q=rust&sort=published_desc
+Authorization: Bearer <token>
+```
+
+## 实用说明
+
+- 此 API 也被仪表盘使用。
+- 将组织知识视为经过筛选的共享记忆，而非原始用户事件存储。
+- 当个人或 Agent 记忆需要演化为可复用的组织知识时，使用此 API。
+
+## 相关页面
+
+- [组织知识指南](/zh/guides/organization-knowledge)
+- [REST API](/zh/api/rest-api)
+- [仪表盘指南](/zh/guides/dashboard)
