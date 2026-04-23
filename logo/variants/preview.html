@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Memorose Logo Variants</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 40px 32px; background: #fafafa; color: #111; }
+  h1 { font-size: 22px; margin: 0 0 28px; }
+  .variant { margin-bottom: 32px; }
+  .variant h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: #555; letter-spacing: 0.3px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel { border-radius: 14px; padding: 28px 24px; display: flex; align-items: center; justify-content: flex-start; min-height: 140px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .light { background: #ffffff; }
+  .dark { background: #0f172a; }
+  .panel img { max-width: 100%; height: auto; display: block; }
+  .label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; display: block; }
+</style>
+</head>
+<body>
+  <h1>Memorose Logo 变体对比</h1>
+
+  <div class="variant">
+    <h2>V1 — 斜体衬线 + 横贯渐变 + 底部细 swash</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v1-italic-light.svg" alt="V1 light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v1-italic-dark.svg" alt="V1 dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V2 — 直立 Memo + 斜体 rose + 细分隔条（单色）</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v2-divider-light.svg" alt="V2 light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v2-divider-dark.svg" alt="V2 dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V2a — 去掉分隔，整词直立单色（最简洁）</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v2a-clean-light.svg" alt="V2a light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v2a-clean-dark.svg" alt="V2a dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V2b — 去掉分隔，保留 Memo 正体 + rose 斜体的节奏</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v2b-italic-shift-light.svg" alt="V2b light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v2b-italic-shift-dark.svg" alt="V2b dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V2c — 整词直立单色 + 末尾小玫瑰色句点</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v2c-dot-light.svg" alt="V2c light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v2c-dot-dark.svg" alt="V2c dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V3 — 连笔手写书法体 (Snell Roundhand 回退链)</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v3-script-light.svg" alt="V3 light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v3-script-dark.svg" alt="V3 dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="variant">
+    <h2>V4 — 极简无衬线 + 两个 o 染成玫瑰色</h2>
+    <div class="pair">
+      <div>
+        <div class="panel light"><img src="v4-minimal-light.svg" alt="V4 light"></div>
+        <span class="label">Light</span>
+      </div>
+      <div>
+        <div class="panel dark"><img src="v4-minimal-dark.svg" alt="V4 dark"></div>
+        <span class="label">Dark</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
