@@ -1,114 +1,124 @@
 ---
 title: 配置
-description: 配置 Memorose 运行时、存储和部署行为。
+description: 配置当前 Memorose 运行时，包括 `llm`、`storage`、`worker`、`raft` 和环境变量覆盖。
 ---
 
 # 配置
 
-Memorose 从 `config.toml` 和环境变量读取配置。当前的配置范围比早期文档版本更广，应被视为基础设施配置（Infrastructure Configuration），而不仅仅是存储调优。
+Memorose 从 `config.toml`、`MEMOROSE__*` 环境变量覆盖，以及少量兼容旧版本的环境变量中读取运行时配置。
+
+当前运行时配置由 `crates/memorose-common/src/config.rs` 中的 `AppConfig` 定义。这才是服务端实际读取的权威来源。
 
 ## 主要文件
 
-- `config.toml`：运行时和存储行为
-- `.env`：提供商密钥和环境特定覆盖
-- `.env.example`：当前环境变量参考
-- `config.example.toml`：当前配置结构参考
+- `config.toml`：服务端加载的运行时配置文件
+- `.env`：`./scripts/start_cluster.sh` 等辅助脚本会加载的本地环境变量
+- `.env.example`：提供商密钥和常见环境变量覆盖示例
+- `crates/memorose-common/src/config.rs`：当前运行时配置结构和默认值
 
 ## 当前顶层配置段
 
+当前服务端配置围绕以下部分组织：
+
 ```toml
-[server]
-[database]
-[database.rocksdb]
-[database.lance]
-[database.tantivy]
-[consolidation]
-[consolidation.llm]
-[forgetting]
-[graph]
+[llm]
+[storage]
 [raft]
-[cache]
-[multimodal]
-[security]
-[telemetry]
-[development]
+[worker]
+[sharding]
+[reranker]
 ```
 
-## 最小示例
+说明：
+
+- `sharding` 是可选的。
+- `reranker` 是可选的，默认使用内置 weighted reranker。
+- 仓库中的旧模板，如 `config.example.toml` 和 `config.toml.example`，与当前运行时 schema 并不完全一致。
+
+## 最小可用示例
 
 ```toml
-[server]
-host = "0.0.0.0"
-port = 3000
+[llm]
+provider = "Gemini"
+model = "gemini-2.0-flash"
+embedding_model = "text-embedding-004"
 
-[database]
-data_dir = "./data"
-wal_sync_mode = "normal"
-
-[consolidation]
-enabled = true
-interval_secs = 10
-batch_size = 100
-entropy_threshold = 2.5
-similarity_threshold = 0.7
-
-[consolidation.llm]
-provider = "gemini"
-model = "gemini-3.1-flash-lite-preview"
-embedding_model = "gemini-embedding-2-preview"
-max_retries = 3
-timeout_secs = 30
-temperature = 0.3
-
-[forgetting]
-enabled = true
-decay_half_life_days = 30
-min_importance = 0.1
-prune_interval_secs = 3600
-
-[graph]
-auto_link_threshold = 0.7
-max_edges_per_node = 100
-enable_page_rank = true
-enable_community_detection = true
+[storage]
+root_dir = "./data/node-1"
+index_commit_interval_ms = 5000
 
 [raft]
-node_id = "node1"
+node_id = 1
 raft_addr = "127.0.0.1:5001"
+heartbeat_interval_ms = 500
+election_timeout_min_ms = 1500
+election_timeout_max_ms = 3000
+snapshot_logs = 1000000
+auto_initialize = true
+
+[worker]
+llm_concurrency = 5
+decay_interval_secs = 60
+prune_threshold = 0.1
+consolidation_interval_ms = 1000
+community_interval_ms = 1000
+insight_interval_ms = 30000
+enable_auto_planner = true
+enable_task_reflection = true
+auto_link_similarity_threshold = 0.6
+tick_interval_ms = 100
 ```
 
 ## 环境变量
 
-`.env.example` 中的常用环境变量：
+支持两种模式：
+
+### 1. 使用 `MEMOROSE__` 的嵌套运行时覆盖
+
+使用 `MEMOROSE__SECTION__KEY=value` 覆盖嵌套配置字段。
 
 ```bash
-LLM_PROVIDER=gemini
-GOOGLE_API_KEY=your_google_api_key_here
-LLM_MODEL=gemini-3.1-flash-lite-preview
-EMBEDDING_MODEL=gemini-embedding-2-preview
-MEMOROSE_WORKER__CONSOLIDATION_INTERVAL_MS=1000
-MEMOROSE_WORKER__LLM_CONCURRENCY=5
-MEMOROSE_WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
+MEMOROSE__WORKER__CONSOLIDATION_INTERVAL_MS=1000
+MEMOROSE__WORKER__LLM_CONCURRENCY=5
+MEMOROSE__WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
+MEMOROSE__RAFT__AUTO_INITIALIZE=true
 ```
 
-使用 `DASHBOARD_ADMIN_PASSWORD` 替换默认的仪表盘密码。
+### 2. 兼容旧版本的直接覆盖
 
-## 各配置段说明
+当前服务端仍会直接读取这些变量：
 
-- `[server]`：绑定地址、端口、工作线程数
-- `[database]`：磁盘布局和引擎特定调优
-- `[consolidation]`：L0 到 L1 的提取节奏和接受阈值
-- `[forgetting]`：低价值记忆的衰减（Decay）和修剪（Pruning）
-- `[graph]`：自动关联和社区检测（Community Detection）
-- `[raft]`：集群、选举时序、成员管理、快照
-- `[cache]`：缓存查询行为
-- `[multimodal]`：图像、音频和视频处理开关
-- `[security]`：认证和速率限制（Rate Limiting）
-- `[telemetry]`：日志、指标、链路追踪（Tracing）
-- `[development]`：模拟 LLM、调试设置、测试确定性
+```bash
+GOOGLE_API_KEY=your_google_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
+NODE_ID=1
+RAFT_ADDR=127.0.0.1:5001
+```
+
+运维辅助脚本还会使用：
+
+```bash
+DASHBOARD_ADMIN_PASSWORD=change-me
+```
+
+重要说明：
+
+- `.env.example` 里出现了 `LLM_PROVIDER`，但当前服务端配置加载器不会直接把它映射到 `llm.provider`。
+- 如果你想纯靠环境变量切换 provider，优先使用 `MEMOROSE__LLM__PROVIDER=OpenAI` 或 `MEMOROSE__LLM__PROVIDER=Gemini`。
+
+## 各配置段控制什么
+
+- `[llm]`：provider、API endpoint、模型名、embedding 设置、可选 STT 设置
+- `[storage]`：数据根目录、索引提交与 recent overlay 行为
+- `[raft]`：节点身份、raft 地址、选举时序、快照、引导行为
+- `[worker]`：整合节奏、遗忘、insight 生成、任务反思、自动连边调优
+- `[sharding]`：多分片部署设置和物理节点映射
+- `[reranker]`：内置 weighted reranker 或外部 HTTP reranker
 
 ## 指导建议
 
-- 使用 `config.example.toml` 作为权威模板。
-- 使用 `.env.example` 作为提供商和工作线程覆盖的权威参考。
-- 避免使用提及 `[storage]`、`[dashboard]` 或 `/health` 的旧文档示例；这些反映的是之前的 API/配置模型。
+- 把 `crates/memorose-common/src/config.rs` 视为权威 schema。
+- 把 `.env.example` 视为示例 convenience file，而不是完整的运行时行为说明。
+- 对提及 `[server]`、`[database]`、`[consolidation]`、`[forgetting]`、`[graph]`、`/health` 或 `/api/v1/*` 的旧示例保持警惕；它们不代表当前服务端的配置和 API。

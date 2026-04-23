@@ -46,6 +46,11 @@ POST /v1/users/:uid/streams/:sid/retrieve
 
 请求字段：`query`、`graph_depth`、`org_id`、`agent_id`、`image / audio / video`
 
+当前认证方式：
+
+- `Authorization: Bearer <dashboard-jwt>`
+- `x-api-key: <api-key>`
+
 <Note>
 本文档集遵循 `memorose-server` 中实现的真实服务器模型，而非旧版 CRUD 风格的记忆 API。
 </Note>
@@ -69,7 +74,9 @@ POST /v1/users/:uid/streams/:sid/retrieve
 当前 API 以 `user_id` 和 `stream_id` 为作用域，并连接到任务、图边、组织知识和集群操作。
 
 - `/events` 用于原始摄入
+- `/events/batch` 用于更高吞吐的批量摄入
 - `/retrieve` 用于混合召回
+- `/memory/context` 用于生成紧凑的 LLM 上下文
 - `/memories/semantic/preview` 和 `/memories/semantic/execute` 用于语义更新和遗忘工作流
 - `/tasks/tree` 和 `/tasks/ready` 用于 L3 执行状态
 - `/organizations/:org_id/knowledge` 用于共享知识
@@ -125,5 +132,8 @@ POST /v1/users/:uid/streams/:sid/retrieve
   </Card>
   <Card title="组织知识" icon="building" href="/zh/guides/organization-knowledge">
     检查某个 `org_id` 的共享记忆层。当个人记忆需要演变为可复用的组织知识时使用。
+  </Card>
+  <Card title="Hermes 插件" icon="plug" href="/zh/guides/hermes-plugin">
+    通过 `memorose` 记忆 provider 插件，将 Hermes Agent 接入已运行的 Memorose 服务。
   </Card>
 </CardGroup>

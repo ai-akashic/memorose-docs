@@ -1,19 +1,19 @@
 ---
 title: 测试
-description: 如何运行测试、理解测试结构以及为 Memorose 编写新测试。
+description: 如何运行测试，以及理解当前 Memorose 的测试结构。
 ---
 
 # 测试
 
 ## 运行测试
 
-运行完整测试套件：
+运行完整 Rust 测试套件：
 
 ```bash
 cargo test
 ```
 
-或测试单个 crate：
+或者运行单个 crate：
 
 ```bash
 cargo test -p memorose-core
@@ -22,123 +22,73 @@ cargo test -p memorose-gateway
 cargo test -p memorose-common
 ```
 
-按名称运行特定测试：
+按名称运行单个测试：
 
 ```bash
-cargo test -p memorose-core -- test_ingest_and_retrieve
+cargo test -p memorose-core test_ingest_and_retrieve
 ```
 
 ## 测试组织
 
-### 单元测试（Unit Tests）
+### 单元测试
 
-嵌入在被测代码旁边，使用 `#[cfg(test)]` 模块。大多数存储和引擎逻辑都有就近的单元测试。
+大多数单元测试通过 `#[cfg(test)]` 和被测模块放在一起。
 
-关键测试文件：
-- `crates/memorose-core/src/storage/tests.rs` — 全面的存储后端测试
-- `engine/`、`llm/` 和 `graph/` 中的模块级 `#[cfg(test)]` 块
+常见入口：
 
-### 集成测试（Integration Tests）
+- `crates/memorose-core/src/engine/tests.rs`
+- `graph/`、`llm/`、`raft/`、`worker.rs` 以及 dashboard handlers 里的模块内 `#[cfg(test)]`
 
-位于 `crates/memorose-core/tests/integration.rs`。这些测试覆盖完整的 ingest → retrieve → mark-processed 流程。
+### 集成测试
 
-## 测试模式
+当前集成测试位于：
+
+- `crates/memorose-core/tests/integration.rs`
+
+这些测试覆盖端到端的 ingest 和 retrieve 流程。
+
+## 常见模式
 
 ### 异步测试
 
-所有 I/O 密集型测试使用 `tokio::test`：
-
-```rust
-#[tokio::test]
-async fn test_ingest_and_retrieve() {
-    // ...
-}
-```
+I/O 较重的测试通常使用 `#[tokio::test]`。
 
 ### 临时目录
 
-需要存储的测试使用 `tempfile` 创建隔离的数据目录：
+需要隔离存储状态的测试通常会把引擎指向临时目录，而不是复用仓库目录。
 
-```rust
-use tempfile::TempDir;
+### 模拟外部 HTTP 调用
 
-#[tokio::test]
-async fn test_storage() {
-    let tmp = TempDir::new().unwrap();
-    let config = Config {
-        data_dir: tmp.path().to_path_buf(),
-        ..Default::default()
-    };
-    // 存储完全隔离，drop 时自动清理
-}
-```
+涉及 HTTP 的测试会使用 `wiremock`，例如：
 
-### Mock LLM
+- `crates/memorose-server/src/shard_manager.rs`
+- `crates/memorose-core/src/llm/openai_tests.rs`
+- `crates/memorose-core/src/llm/gemini_tests.rs`
 
-涉及 LLM 调用的测试使用 mock 模式以避免真实 API 调用：
+### LLM 相关测试
 
-```toml
-# config.toml
-[development]
-use_mock_llm = true
-```
-
-Mock 提供商返回确定性响应，使测试无需 API 密钥即可复现。
-
-### HTTP Mock
-
-调用外部服务的测试使用 `wiremock` 进行请求拦截：
-
-```rust
-use wiremock::{MockServer, Mock, ResponseTemplate};
-use wiremock::matchers::method;
-
-#[tokio::test]
-async fn test_external_call() {
-    let mock_server = MockServer::start().await;
-    Mock::given(method("POST"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({...})))
-        .mount(&mock_server)
-        .await;
-    // 将客户端指向 mock_server.uri()
-}
-```
+当前 `AppConfig` 没有一个会被运行时 loader 消费的 `[development].use_mock_llm` 开关。实际测试里通常是在 Rust 测试代码内部显式构造 mock client。
 
 ## 编写新测试
 
-### 约定
+- 单元测试尽量贴近被测代码。
+- 跨模块集成测试放到 `crates/memorose-core/tests/`。
+- 使用描述性名称，例如 `test_hybrid_search_with_agent_filter`。
+- 优先用临时目录，避免共享磁盘状态。
+- 除非你是在刻意验证 provider 集成，否则避免真实外部调用。
 
-- 将单元测试放在被测文件底部的 `#[cfg(test)]` 模块中
-- 将集成测试放在 `crates/memorose-core/tests/` 目录下
-- 使用描述性测试名称：`test_hybrid_search_with_agent_filter`，而非 `test_search_2`
-- 清理所有临时资源——优先使用 `TempDir` 而非手动目录管理
-- 避免真实 LLM 调用——除非你专门测试 LLM 集成，否则使用 mock 模式
+## Dashboard 检查
 
-### 典型集成测试流程
-
-```rust
-#[tokio::test]
-async fn test_basic_flow() {
-    // 1. 使用临时存储创建引擎
-    let tmp = TempDir::new().unwrap();
-    let engine = create_test_engine(tmp.path()).await;
-
-    // 2. 摄入事件
-    engine.ingest_event(user_id, stream_id, event).await.unwrap();
-
-    // 3. 检索并验证
-    let results = engine.search_hybrid(query, app_id, None).await.unwrap();
-    assert!(!results.is_empty());
-}
-```
-
-## Dashboard 测试
-
-对于 Next.js 仪表盘：
+当前 dashboard 可用的脚本是：
 
 ```bash
 cd dashboard
-pnpm test       # 运行测试
-pnpm lint       # 代码检查
-pnpm type-check # TypeScript 类型检查
+pnpm lint
+pnpm build
+```
+
+如果你需要本地交互验证：
+
+```bash
+pnpm dev
 ```

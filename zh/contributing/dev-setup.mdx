@@ -1,6 +1,6 @@
 ---
 title: 开发环境搭建
-description: 从零开始搭建 Memorose 本地开发环境。
+description: 按当前仓库结构和脚本搭建本地 Memorose 开发环境。
 ---
 
 # 开发环境搭建
@@ -9,12 +9,12 @@ description: 从零开始搭建 Memorose 本地开发环境。
 
 | 工具 | 版本 | 备注 |
 | --- | --- | --- |
-| Rust | 1.88+ | 通过仓库根目录的 `rust-toolchain` 锁定 |
-| Node.js | 20+ | 用于仪表盘前端 |
-| pnpm | 最新版 | 仪表盘包管理器 |
-| protobuf-compiler | — | gRPC / Raft 传输层所需 |
-| cmake | — | 部分原生依赖所需 |
-| libclang-dev | — | `bindgen` 所需（仅 Linux） |
+| Rust | 1.88+ | 由仓库根目录 `rust-toolchain` 固定 |
+| Node.js | 20+ | 用于 dashboard 前端 |
+| pnpm | 最新版 | dashboard 包管理器 |
+| protobuf-compiler | — | Raft 相关构建步骤需要 |
+| cmake | — | 某些原生依赖需要 |
+| libclang-dev | — | Linux 上 `bindgen` 需要 |
 
 ### macOS
 
@@ -40,78 +40,78 @@ cd Memorose
 cargo build
 ```
 
-工作区包含四个 crate——`memorose-common`、`memorose-core`、`memorose-server` 和 `memorose-gateway`。直接运行 `cargo build` 即可编译全部。
+工作区包含四个 crate：`memorose-common`、`memorose-core`、`memorose-server` 和 `memorose-gateway`。
 
-构建仪表盘前端：
+构建 dashboard：
 
 ```bash
 cd dashboard
 pnpm install
 pnpm build
 ```
+
 ## 配置
 
-复制示例文件并填入你的 LLM API 密钥：
+复制示例环境文件：
 
 ```bash
 cp .env.example .env
-cp config.example.toml config.toml
 ```
 
-至少在 `.env` 中设置以下其一：
+至少设置一个 provider key 和模型名：
 
 ```bash
-# Gemini（默认）
 GOOGLE_API_KEY=your_key_here
-
-# 或 OpenAI
-# LLM_PROVIDER=openai
-# OPENAI_API_KEY=your_key_here
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
 ```
 
-如需在开发中不使用真实 LLM 调用，可在 `config.toml` 中启用 mock 模式：
+如果你想通过环境变量明确指定 provider，优先使用：
 
-```toml
-[development]
-use_mock_llm = true
+```bash
+MEMOROSE__LLM__PROVIDER=Gemini
 ```
+
+或者：
+
+```bash
+MEMOROSE__LLM__PROVIDER=OpenAI
+OPENAI_API_KEY=your_key_here
+```
+
+请根据 `crates/memorose-common/src/config.rs` 的当前 schema 手工创建 `config.toml`。不要把 `config.example.toml` 当成完全最新的模板。
 
 ## 本地运行
 
-### 单机模式（Standalone Mode）
+### Standalone 模式
 
-最快获得运行实例的方式：
+最快拿到单节点实例的方式：
 
 ```bash
 ./scripts/start_cluster.sh start --mode standalone
 ```
 
-这将在端口 3000 启动一个服务器节点，仪表盘在端口 3100。
+这会在 `3000` 启动一个 API 节点，在 `3100` 启动 dashboard。
 
-### 集群模式（Cluster Mode，3 个本地节点）
+### 本地 Cluster 模式
 
-在一台机器上模拟 3 节点 Raft 集群：
+模拟 3 节点本地 Raft 集群：
 
 ```bash
 ./scripts/start_cluster.sh start --clean --build
 ```
 
-### 其他命令
+### 其他辅助命令
 
 ```bash
-# 检查进程状态
 ./scripts/start_cluster.sh status
-
-# 停止所有服务
 ./scripts/start_cluster.sh stop
-
-# 使用全新数据重启
 ./scripts/start_cluster.sh restart --clean
 ```
 
-### 仪表盘开发服务器
+### Dashboard 开发服务器
 
-用于前端开发的热重载模式：
+用于前端热更新开发：
 
 ```bash
 cd dashboard
@@ -122,24 +122,23 @@ pnpm dev
 
 | 服务 | 端口 | 备注 |
 | --- | --- | --- |
-| API（节点 1） | 3000 | 主服务器 |
-| API（节点 2） | 3001 | 仅集群模式 |
-| API（节点 3） | 3002 | 仅集群模式 |
-| Gateway | 8080 | 无状态请求路由 |
+| API（node 1） | 3000 | 主本地节点 |
+| API（node 2） | 3001 | 仅本地 cluster 模式 |
+| API（node 3） | 3002 | 仅本地 cluster 模式 |
+| Gateway | 8080 | 仅 `docker-compose.yml` 场景 |
 | Dashboard | 3100 | Next.js 前端 |
-| Raft | 5001–5003 | 内部共识协议 |
-| Metrics | 9090 | Prometheus 端点 |
+| Raft | 5001–5003 | 内部共识流量 |
 
 ## Docker
 
-提供了 `docker-compose.yml` 用于运行完整技术栈：
+仓库提供了 `docker-compose.yml`：
 
 ```bash
 docker compose up
 ```
 
-这将启动 Gateway、两个服务器节点和仪表盘。运行前请确保 `.env` 文件中包含所需的 API 密钥。
+这会启动 gateway、两个 server 节点和 dashboard。
 
 <Note>
-在 Docker 中运行仪表盘时，请将 `DASHBOARD_API_ORIGIN` 设置为指向后端容器（例如 `http://memorose:3000`）。否则仪表盘会尝试在自己的容器内访问 `127.0.0.1:3000` 而导致失败。
+在 Docker 里运行 dashboard 时，请把 `DASHBOARD_API_ORIGIN` 指向后端容器 URL，例如 `http://memorose-node-0:3000`。否则 dashboard 会在自己的容器里请求 `127.0.0.1:3000` 并失败。
 </Note>

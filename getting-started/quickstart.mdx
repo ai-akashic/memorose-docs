@@ -1,13 +1,13 @@
 ---
 title: Quickstart
-description: The shortest path from a running Memorose node to a real retrieval round-trip.
+description: The shortest path from a running Memorose node to a real ingestion and retrieval round-trip.
 ---
 
 # Quickstart
 
-This page follows the current `memorose-server` API directly. It is the shortest path from a running node to a real retrieval round-trip.
+This page follows the current `memorose-server` API directly.
 
-## What You Need
+## What you need
 
 - a running Memorose server on `http://127.0.0.1:3000`
 - dashboard credentials
@@ -15,22 +15,18 @@ This page follows the current `memorose-server` API directly. It is the shortest
 - `uuidgen`
 
 <Note>
-In the current single-node default setup, Memorose auto-initializes Raft at startup. You do **not** need to call `/v1/cluster/initialize` before sending writes unless you intentionally disabled `raft.auto_initialize`.
+In the current single-node default setup, Memorose auto-initializes Raft at startup. You do not need to call `/v1/cluster/initialize` before sending writes unless you intentionally disabled `raft.auto_initialize`.
 </Note>
 
-## The Happy Path
+## The happy path
 
-1. log in and get a bearer token
-2. create a stream
-3. ingest one event
-4. retrieve against that stream
-5. check whether consolidation backlog is clear
+1. Log in and get a bearer token.
+2. Create a stream ID.
+3. Ingest one event.
+4. Retrieve against that stream.
+5. Check whether consolidation backlog is clear.
 
-<Tip>
-If you only want to validate the API surface, this page is enough. If you want the full model behind it, continue with [Architecture Overview](/architecture/overview).
-</Tip>
-
-## 1. Set Base Variables
+## 1. Set base variables
 
 ```bash
 export BASE_URL="http://127.0.0.1:3000"
@@ -38,9 +34,9 @@ export USER_ID="dylan"
 export ORG_ID="default"
 ```
 
-## 2. Log In And Get A Token
+## 2. Log in and get a token
 
-`/v1` routes accept a dashboard JWT bearer token.
+Current `/v1` routes accept either a dashboard JWT bearer token or an API key. For local development, the dashboard login is the fastest path.
 
 ```bash
 TOKEN=$(curl -s -X POST "$BASE_URL/v1/dashboard/auth/login" \
@@ -51,13 +47,13 @@ TOKEN=$(curl -s -X POST "$BASE_URL/v1/dashboard/auth/login" \
   }' | jq -r '.token')
 ```
 
-## 3. Create A Stream ID
+## 3. Create a stream ID
 
 ```bash
 STREAM_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
 ```
 
-## 4. Ingest An Event
+## 4. Ingest an event
 
 ```bash
 curl -s -X POST "$BASE_URL/v1/users/$USER_ID/streams/$STREAM_ID/events" \
@@ -79,7 +75,7 @@ Expected response shape:
 }
 ```
 
-## 5. Retrieve Memory
+## 5. Retrieve memory
 
 ```bash
 curl -s -X POST "$BASE_URL/v1/users/$USER_ID/streams/$STREAM_ID/retrieve" \
@@ -103,7 +99,7 @@ Expected response shape:
     {
       "unit": {
         "id": "...",
-        "memory_type": "Fact",
+        "memory_type": "factual",
         "content": "...",
         "keywords": ["rust", "systems"],
         "level": 1
@@ -118,11 +114,11 @@ Expected response shape:
 Important response fields:
 
 - `results[].unit.level`: where the retrieved memory sits in the hierarchy
-- `results[].unit.memory_type`: what kind of memory unit matched
+- `results[].unit.memory_type`: `factual` or `procedural`
 - `score`: final ranking score after retrieval fusion
 - `query_time_ms`: observed server-side latency for the retrieval call
 
-## 6. Check Consolidation Backlog
+## 6. Check consolidation backlog
 
 ```bash
 curl -s "$BASE_URL/v1/status/pending" \
@@ -131,7 +127,7 @@ curl -s "$BASE_URL/v1/status/pending" \
 
 When `"ready": true`, the current pending-event backlog is clear.
 
-## Where To Go Next
+## Where to go next
 
 - [Configuration](/getting-started/configuration)
 - [Basic Operations](/guides/basic-operations)

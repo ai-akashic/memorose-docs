@@ -21,8 +21,10 @@ POST /v1/dashboard/auth/login
 
 Default credentials are `admin` / `admin` unless you set `DASHBOARD_ADMIN_PASSWORD`.
 
+On first login, the response can include `must_change_password: true` if the dashboard is still using the bootstrap admin password.
+
 <Warning>
-**Docker Deployments:** If you are deploying the Dashboard via a custom `docker-compose.yml` or `docker run`, you **must** set the `DASHBOARD_API_ORIGIN` environment variable for the Dashboard container to point to the backend API (e.g., `DASHBOARD_API_ORIGIN=http://memorose:3000`). If omitted, the Dashboard will attempt to proxy login requests to `127.0.0.1` inside its own container, resulting in a `connect ECONNREFUSED 127.0.0.1:3000` error.
+**Docker Deployments:** If you are deploying the Dashboard via a custom `docker-compose.yml` or `docker run`, you **must** set the `DASHBOARD_API_ORIGIN` environment variable for the Dashboard container to point to the backend API, for example `DASHBOARD_API_ORIGIN=http://memorose-node-0:3000`. If omitted, the Dashboard will attempt to proxy login requests to `127.0.0.1` inside its own container, resulting in a `connect ECONNREFUSED 127.0.0.1:3000` error.
 </Warning>
 
 ## Main Features
@@ -32,9 +34,10 @@ Default credentials are `admin` / `admin` unless you set `DASHBOARD_ADMIN_PASSWO
 - search playground
 - semantic forget / update preview flows
 - correction review queue
+- correction review approve / reject actions
 - cluster status
 - agent metrics
 - organization management
+- API key management
 - organization knowledge views
 - runtime config inspection
-

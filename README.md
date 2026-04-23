@@ -1,55 +1,55 @@
-# Mintlify Starter Kit
+# Memorose Docs
 
-Use the starter kit to get your docs deployed and ready to customize.
+Documentation site for Memorose, built with Mintlify.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+This repository documents the current `memorose-server` HTTP API, runtime model, deployment patterns, and contributor workflows.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+## Local development
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
-
-## AI-assisted writing
-
-Set up your AI coding tool to work with Mintlify:
+Install the Mintlify CLI:
 
 ```bash
-npx skills add https://mintlify.com/docs
-```
-
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
-
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
 npm i -g mint
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Run the local preview from the repo root:
 
-```
+```bash
 mint dev
 ```
 
-View your local preview at `http://localhost:3000`.
+The preview runs at `http://localhost:3000`.
 
-## Publishing changes
+## Link checks
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+Run broken-link validation before publishing documentation changes:
 
-## Need help?
+```bash
+mint broken-links
+```
 
-### Troubleshooting
+## Source of truth
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
+This docs repo should follow the current code in the main Memorose repository.
 
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+When docs and examples conflict, prefer:
+
+- `Memorose/crates/memorose-server/src/main.rs`
+- `Memorose/crates/memorose-server/src/types.rs`
+- `Memorose/crates/memorose-common/src/config.rs`
+- `Memorose/README.md`
+
+## What this docs set covers
+
+- `getting-started/`: installation, quickstart, and runtime configuration
+- `api/`: current `v1` HTTP routes
+- `architecture/`: memory hierarchy, storage model, and deployment model
+- `guides/`: operational and integration workflows
+- `contributing/`: local development, testing, codebase structure, and dashboard internals
+- `sdks/`: HTTP-first client-wrapper guidance for language-specific users
+
+## Writing guidance
+
+- Document the current runtime, not older CRUD-style memory APIs.
+- Prefer explicit route names and request fields over vague conceptual summaries.
+- Keep English and Chinese pages aligned when changing product behavior or API semantics.

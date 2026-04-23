@@ -46,6 +46,11 @@ POST /v1/users/:uid/streams/:sid/retrieve
 
 Request fields: `query`, `graph_depth`, `org_id`, `agent_id`, `image / audio / video`
 
+Current auth options:
+
+- `Authorization: Bearer <dashboard-jwt>`
+- `x-api-key: <api-key>`
+
 <Note>
 This docs set follows the real server model implemented in `memorose-server`, not the older CRUD-style memory API.
 </Note>
@@ -69,7 +74,9 @@ This docs set follows the real server model implemented in `memorose-server`, no
 The current API is scoped by `user_id` and `stream_id`, then connected to tasks, graph edges, organization knowledge, and cluster operations.
 
 - `/events` for raw ingest
+- `/events/batch` for higher-throughput ingest
 - `/retrieve` for hybrid recall
+- `/memory/context` for compact LLM-ready context rendering
 - `/memories/semantic/preview` and `/memories/semantic/execute` for semantic update and forgetting workflows
 - `/tasks/tree` and `/tasks/ready` for L3 execution state
 - `/organizations/:org_id/knowledge` for shared knowledge
@@ -125,5 +132,8 @@ The current API is scoped by `user_id` and `stream_id`, then connected to tasks,
   </Card>
   <Card title="Organization Knowledge" icon="building" href="/guides/organization-knowledge">
     Inspect the shared memory layer for one `org_id`. Use it when personal memory needs to evolve into reusable organizational knowledge.
+  </Card>
+  <Card title="Hermes Plugin" icon="plug" href="/guides/hermes-plugin">
+    Connect Hermes Agent to a running Memorose server through the `memorose` memory provider plugin.
   </Card>
 </CardGroup>

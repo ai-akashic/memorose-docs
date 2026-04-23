@@ -1,43 +1,56 @@
 ---
 title: Installation
-description: Install and configure a local Memorose instance.
+description: Install and configure a local Memorose instance against the current runtime.
 ---
 
 # Installation
 
-Memorose is typically run as a Rust service plus a separate dashboard UI.
+Memorose runs as a Rust API server plus a separate dashboard UI.
 
 ## Prerequisites
 
 - Rust toolchain
-- An LLM provider key for consolidation and embedding
-- Optional: `jq` for the command-line examples in this docs set
+- Node.js and `pnpm` for the dashboard
+- An LLM provider key for embeddings and consolidation
+- Optional: `jq` for command-line examples
 
-## Clone The Repository
+## Clone the repository
 
 ```bash
 git clone https://github.com/ai-akashic/Memorose.git
 cd Memorose
 ```
 
-## Environment Setup
+## Environment setup
 
-Copy the example environment file and fill in your provider settings.
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-At minimum, configure:
+At minimum, set a provider key plus model names:
 
 ```bash
-LLM_PROVIDER=gemini
 GOOGLE_API_KEY=your_google_api_key_here
-LLM_MODEL=gemini-3.1-flash-lite-preview
-EMBEDDING_MODEL=gemini-embedding-2-preview
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
 ```
 
-If you want to avoid the default dashboard password warning, also set:
+If you want to force the provider through env overrides, prefer:
+
+```bash
+MEMOROSE__LLM__PROVIDER=Gemini
+```
+
+Or:
+
+```bash
+MEMOROSE__LLM__PROVIDER=OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+To avoid the default dashboard password warning, also set:
 
 ```bash
 DASHBOARD_ADMIN_PASSWORD=change-me
@@ -45,27 +58,44 @@ DASHBOARD_ADMIN_PASSWORD=change-me
 
 ## Configuration
 
-Start from the shipped example:
+Create `config.toml` yourself using the current schema from `crates/memorose-common/src/config.rs`.
 
-```bash
-cp config.example.toml config.toml
+Do not assume `config.example.toml` is fully current. It contains older sections such as `[server]`, `[database]`, and `[consolidation]` that do not match the runtime loader exactly.
+
+A minimal starting point is:
+
+```toml
+[llm]
+provider = "Gemini"
+model = "gemini-2.0-flash"
+embedding_model = "text-embedding-004"
+
+[storage]
+root_dir = "./data/node-1"
+
+[raft]
+node_id = 1
+raft_addr = "127.0.0.1:5001"
+heartbeat_interval_ms = 500
+election_timeout_min_ms = 1500
+election_timeout_max_ms = 3000
+snapshot_logs = 1000000
+auto_initialize = true
+
+[worker]
+llm_concurrency = 5
+decay_interval_secs = 60
+prune_threshold = 0.1
+consolidation_interval_ms = 1000
+community_interval_ms = 1000
+insight_interval_ms = 30000
+enable_auto_planner = true
+enable_task_reflection = true
+auto_link_similarity_threshold = 0.6
+tick_interval_ms = 100
 ```
 
-The current config shape is organized around:
-
-- `[server]`
-- `[database]`
-- `[consolidation]`
-- `[forgetting]`
-- `[graph]`
-- `[raft]`
-- `[cache]`
-- `[multimodal]`
-- `[security]`
-- `[telemetry]`
-- `[development]`
-
-## Start The Stack
+## Start the stack
 
 Recommended local startup:
 
@@ -73,9 +103,15 @@ Recommended local startup:
 ./scripts/start_cluster.sh start --clean --build
 ```
 
-This starts backend nodes on `3000` and related cluster ports, and the dashboard UI on `3100`.
+This starts backend nodes on `3000`, `3001`, and `3002` in local cluster mode, plus the dashboard UI on `3100`.
 
-## Manual Server Startup
+If you want a single local node:
+
+```bash
+./scripts/start_cluster.sh start --mode standalone
+```
+
+## Manual server startup
 
 If you only want the API server:
 
@@ -83,7 +119,7 @@ If you only want the API server:
 cargo run --release -p memorose-server
 ```
 
-## Verify The Installation
+## Verify the installation
 
 Check the root endpoint:
 
@@ -103,8 +139,8 @@ Memorose is running.
 - API redirect: `http://127.0.0.1:3000/dashboard`
 - Default login: `admin` / `admin`
 
-Change the password on first use, or set `DASHBOARD_ADMIN_PASSWORD` before startup.
+On first login, the response may include `must_change_password: true` until you set a new password.
 
 <Warning>
-**Docker Deployments:** If you deploy the Dashboard using your own `docker-compose.yml` or `docker run`, you **must** set the `DASHBOARD_API_ORIGIN` environment variable on the Dashboard container to point to your backend service (e.g., `DASHBOARD_API_ORIGIN=http://memorose:3000`). Otherwise, API requests won't reach the backend and you will encounter `connect ECONNREFUSED 127.0.0.1:3000` errors during login.
+If you deploy the dashboard using your own `docker-compose.yml` or `docker run`, you must set `DASHBOARD_API_ORIGIN` on the dashboard container to point at the backend API, for example `DASHBOARD_API_ORIGIN=http://memorose-node-0:3000`. Otherwise login and proxied dashboard requests will fail with `connect ECONNREFUSED 127.0.0.1:3000`.
 </Warning>

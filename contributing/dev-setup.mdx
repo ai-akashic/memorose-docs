@@ -1,6 +1,6 @@
 ---
 title: Development Setup
-description: Set up a local Memorose development environment from scratch.
+description: Set up a local Memorose development environment against the current repo layout and scripts.
 ---
 
 # Development Setup
@@ -12,9 +12,9 @@ description: Set up a local Memorose development environment from scratch.
 | Rust | 1.88+ | Pinned via `rust-toolchain` in the repo root |
 | Node.js | 20+ | For the dashboard frontend |
 | pnpm | latest | Dashboard package manager |
-| protobuf-compiler | — | Required by gRPC / Raft transport |
+| protobuf-compiler | — | Required by Raft transport build steps |
 | cmake | — | Required by some native dependencies |
-| libclang-dev | — | Required by `bindgen` (Linux only) |
+| libclang-dev | — | Required by `bindgen` on Linux |
 
 ### macOS
 
@@ -32,7 +32,7 @@ npm i -g pnpm
 rustup install 1.88.0
 ```
 
-## Clone and Build
+## Clone and build
 
 ```bash
 git clone https://github.com/ai-akashic/Memorose.git
@@ -40,7 +40,7 @@ cd Memorose
 cargo build
 ```
 
-The workspace contains four crates — `memorose-common`, `memorose-core`, `memorose-server`, and `memorose-gateway`. A plain `cargo build` compiles all of them.
+The workspace contains four crates: `memorose-common`, `memorose-core`, `memorose-server`, and `memorose-gateway`.
 
 For the dashboard frontend:
 
@@ -52,65 +52,64 @@ pnpm build
 
 ## Configuration
 
-Copy the example files and fill in your LLM API key:
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
-cp config.example.toml config.toml
 ```
 
-At minimum, set one of these in `.env`:
+At minimum, set one provider key and model names:
 
 ```bash
-# Gemini (default)
 GOOGLE_API_KEY=your_key_here
-
-# Or OpenAI
-# LLM_PROVIDER=openai
-# OPENAI_API_KEY=your_key_here
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
 ```
 
-For development without real LLM calls, enable mock mode in `config.toml`:
+If you want to force the provider via env, prefer:
 
-```toml
-[development]
-use_mock_llm = true
+```bash
+MEMOROSE__LLM__PROVIDER=Gemini
 ```
 
-## Running Locally
+Or:
 
-### Standalone Mode (single node)
+```bash
+MEMOROSE__LLM__PROVIDER=OpenAI
+OPENAI_API_KEY=your_key_here
+```
 
-The fastest way to get a running instance:
+Create `config.toml` manually using the current schema in `crates/memorose-common/src/config.rs`. Do not rely on `config.example.toml` as a fully current template.
+
+## Running locally
+
+### Standalone mode
+
+The fastest way to get one local node running:
 
 ```bash
 ./scripts/start_cluster.sh start --mode standalone
 ```
 
-This starts one server node on port 3000 and the dashboard on port 3100.
+This starts one API node on port `3000` and the dashboard on `3100`.
 
-### Cluster Mode (3 local nodes)
+### Local cluster mode
 
-Simulates a 3-node Raft cluster on one machine:
+To simulate a 3-node local Raft cluster:
 
 ```bash
 ./scripts/start_cluster.sh start --clean --build
 ```
 
-### Other Commands
+### Other helper commands
 
 ```bash
-# Check process status
 ./scripts/start_cluster.sh status
-
-# Stop everything
 ./scripts/start_cluster.sh stop
-
-# Restart with fresh data
 ./scripts/start_cluster.sh restart --clean
 ```
 
-### Dashboard Dev Server
+### Dashboard dev server
 
 For frontend development with hot reload:
 
@@ -123,24 +122,23 @@ pnpm dev
 
 | Service | Port | Notes |
 | --- | --- | --- |
-| API (node 1) | 3000 | Primary server |
-| API (node 2) | 3001 | Cluster mode only |
-| API (node 3) | 3002 | Cluster mode only |
-| Gateway | 8080 | Stateless request router |
+| API (node 1) | 3000 | Primary local node |
+| API (node 2) | 3001 | Local cluster mode only |
+| API (node 3) | 3002 | Local cluster mode only |
+| Gateway | 8080 | `docker-compose.yml` only |
 | Dashboard | 3100 | Next.js frontend |
-| Raft | 5001–5003 | Internal consensus |
-| Metrics | 9090 | Prometheus endpoint |
+| Raft | 5001–5003 | Internal consensus traffic |
 
 ## Docker
 
-A `docker-compose.yml` is provided for running the full stack:
+A `docker-compose.yml` is provided:
 
 ```bash
 docker compose up
 ```
 
-This starts the gateway, two server nodes, and the dashboard. Make sure your `.env` file has the required API keys before running.
+This starts the gateway, two server nodes, and the dashboard.
 
 <Note>
-When running the dashboard in Docker, set `DASHBOARD_API_ORIGIN` to point to the backend container (e.g., `http://memorose:3000`). Otherwise the dashboard will try to reach `127.0.0.1:3000` inside its own container and fail.
+When running the dashboard in Docker, set `DASHBOARD_API_ORIGIN` to the backend container URL, for example `http://memorose-node-0:3000`. Otherwise the dashboard will try to call `127.0.0.1:3000` inside its own container and fail.
 </Note>

@@ -1,17 +1,18 @@
 ---
 title: 安装
-description: 安装并配置本地 Memorose 实例。
+description: 面向当前运行时安装并配置本地 Memorose 实例。
 ---
 
 # 安装
 
-Memorose 通常作为一个 Rust 服务加上一个独立的仪表盘（Dashboard）UI 运行。
+Memorose 由 Rust API 服务和独立的仪表盘 UI 组成。
 
 ## 前置条件
 
-- Rust 工具链（Toolchain）
-- 用于整合和嵌入的 LLM 提供商密钥
-- 可选：`jq`，用于本文档集中的命令行示例
+- Rust 工具链
+- Node.js 和 `pnpm`，用于仪表盘
+- 用于 embedding 和 consolidation 的 LLM 提供商密钥
+- 可选：`jq`，用于命令行示例
 
 ## 克隆仓库
 
@@ -22,22 +23,34 @@ cd Memorose
 
 ## 环境配置
 
-复制示例环境文件并填入你的提供商设置。
+复制示例环境文件：
 
 ```bash
 cp .env.example .env
 ```
 
-至少需要配置：
+至少需要设置提供商密钥和模型名：
 
 ```bash
-LLM_PROVIDER=gemini
 GOOGLE_API_KEY=your_google_api_key_here
-LLM_MODEL=gemini-3.1-flash-lite-preview
-EMBEDDING_MODEL=gemini-embedding-2-preview
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
 ```
 
-如果你想避免默认仪表盘密码警告，还需设置：
+如果你想通过环境变量明确指定 provider，优先使用：
+
+```bash
+MEMOROSE__LLM__PROVIDER=Gemini
+```
+
+或者：
+
+```bash
+MEMOROSE__LLM__PROVIDER=OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+如果你不想看到默认仪表盘密码告警，还可以设置：
 
 ```bash
 DASHBOARD_ADMIN_PASSWORD=change-me
@@ -45,25 +58,42 @@ DASHBOARD_ADMIN_PASSWORD=change-me
 
 ## 配置
 
-从附带的示例开始：
+请根据 `crates/memorose-common/src/config.rs` 中的当前 schema 自行创建 `config.toml`。
 
-```bash
-cp config.example.toml config.toml
+不要假设 `config.example.toml` 一定是最新的。它包含 `[server]`、`[database]`、`[consolidation]` 等旧段落，和当前运行时加载器并不完全一致。
+
+一个最小起步配置如下：
+
+```toml
+[llm]
+provider = "Gemini"
+model = "gemini-2.0-flash"
+embedding_model = "text-embedding-004"
+
+[storage]
+root_dir = "./data/node-1"
+
+[raft]
+node_id = 1
+raft_addr = "127.0.0.1:5001"
+heartbeat_interval_ms = 500
+election_timeout_min_ms = 1500
+election_timeout_max_ms = 3000
+snapshot_logs = 1000000
+auto_initialize = true
+
+[worker]
+llm_concurrency = 5
+decay_interval_secs = 60
+prune_threshold = 0.1
+consolidation_interval_ms = 1000
+community_interval_ms = 1000
+insight_interval_ms = 30000
+enable_auto_planner = true
+enable_task_reflection = true
+auto_link_similarity_threshold = 0.6
+tick_interval_ms = 100
 ```
-
-当前配置结构围绕以下部分组织：
-
-- `[server]`
-- `[database]`
-- `[consolidation]`
-- `[forgetting]`
-- `[graph]`
-- `[raft]`
-- `[cache]`
-- `[multimodal]`
-- `[security]`
-- `[telemetry]`
-- `[development]`
 
 ## 启动服务栈
 
@@ -73,11 +103,17 @@ cp config.example.toml config.toml
 ./scripts/start_cluster.sh start --clean --build
 ```
 
-这将在 `3000` 端口及相关集群端口启动后端节点，并在 `3100` 端口启动仪表盘 UI。
+这会在本地 cluster 模式下启动 `3000`、`3001`、`3002` 三个后端节点，并在 `3100` 启动仪表盘 UI。
 
-## 手动启动服务器
+如果你只想跑一个本地节点：
 
-如果你只需要 API 服务器：
+```bash
+./scripts/start_cluster.sh start --mode standalone
+```
+
+## 手动启动服务端
+
+如果你只需要 API 服务：
 
 ```bash
 cargo run --release -p memorose-server
@@ -101,10 +137,10 @@ Memorose is running.
 
 - 仪表盘 UI：`http://127.0.0.1:3100/dashboard`
 - API 重定向：`http://127.0.0.1:3000/dashboard`
-- 默认登录凭据：`admin` / `admin`
+- 默认登录：`admin` / `admin`
 
-首次使用时请更改密码，或在启动前设置 `DASHBOARD_ADMIN_PASSWORD`。
+首次登录后，响应里可能包含 `must_change_password: true`，直到你设置新密码。
 
 <Warning>
-**Docker 部署：** 如果你使用自己的 `docker-compose.yml` 或 `docker run` 部署仪表盘，你**必须**在仪表盘容器上设置 `DASHBOARD_API_ORIGIN` 环境变量，使其指向你的后端服务（例如 `DASHBOARD_API_ORIGIN=http://memorose:3000`）。否则 API 请求将无法到达后端，你会在登录时遇到 `connect ECONNREFUSED 127.0.0.1:3000` 错误。
+如果你使用自己的 `docker-compose.yml` 或 `docker run` 部署仪表盘，必须在仪表盘容器上设置 `DASHBOARD_API_ORIGIN` 指向后端 API，例如 `DASHBOARD_API_ORIGIN=http://memorose-node-0:3000`。否则登录和仪表盘代理请求会因 `connect ECONNREFUSED 127.0.0.1:3000` 失败。
 </Warning>

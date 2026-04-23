@@ -1,34 +1,30 @@
 ---
 title: 快速开始
-description: 从运行中的 Memorose 节点到完成一次真实检索往返的最短路径。
+description: 从运行中的 Memorose 节点到完成一次真实写入和检索往返的最短路径。
 ---
 
 # 快速开始
 
-本页直接遵循当前的 `memorose-server` API。这是从运行中的节点到完成一次真实检索往返（Round-trip）的最短路径。
+本页直接对应当前 `memorose-server` API。
 
 ## 准备工作
 
-- 运行在 `http://127.0.0.1:3000` 上的 Memorose 服务器
+- 运行在 `http://127.0.0.1:3000` 的 Memorose 服务
 - 仪表盘凭据
 - `jq`
 - `uuidgen`
 
 <Note>
-在当前的单节点默认配置中，Memorose 在启动时会自动初始化 Raft。除非你有意禁用了 `raft.auto_initialize`，否则在发送写入请求之前**不需要**调用 `/v1/cluster/initialize`。
+在当前单节点默认配置中，Memorose 启动时会自动初始化 Raft。除非你刻意关闭 `raft.auto_initialize`，否则在发送写请求前不需要调用 `/v1/cluster/initialize`。
 </Note>
 
-## 快乐路径
+## 最短路径
 
-1. 登录并获取 Bearer 令牌（Token）
-2. 创建一个流（Stream）
-3. 摄入一个事件
-4. 对该流进行检索
-5. 检查整合积压（Consolidation Backlog）是否已清空
-
-<Tip>
-如果你只想验证 API 接口，本页内容就足够了。如果你想了解背后的完整模型，请继续阅读[架构概览](/zh/architecture/overview)。
-</Tip>
+1. 登录并拿到 bearer token。
+2. 创建一个 stream ID。
+3. 写入一个事件。
+4. 针对该 stream 做检索。
+5. 检查 consolidation backlog 是否清空。
 
 ## 1. 设置基础变量
 
@@ -38,9 +34,9 @@ export USER_ID="dylan"
 export ORG_ID="default"
 ```
 
-## 2. 登录并获取令牌
+## 2. 登录并获取 token
 
-`/v1` 路由接受仪表盘 JWT Bearer 令牌。
+当前 `/v1` 路由支持 dashboard JWT bearer token 或 API key。本地开发最快的方式仍然是 dashboard 登录。
 
 ```bash
 TOKEN=$(curl -s -X POST "$BASE_URL/v1/dashboard/auth/login" \
@@ -51,13 +47,13 @@ TOKEN=$(curl -s -X POST "$BASE_URL/v1/dashboard/auth/login" \
   }' | jq -r '.token')
 ```
 
-## 3. 创建流 ID
+## 3. 创建 stream ID
 
 ```bash
 STREAM_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
 ```
 
-## 4. 摄入一个事件
+## 4. 写入一个事件
 
 ```bash
 curl -s -X POST "$BASE_URL/v1/users/$USER_ID/streams/$STREAM_ID/events" \
@@ -103,7 +99,7 @@ curl -s -X POST "$BASE_URL/v1/users/$USER_ID/streams/$STREAM_ID/retrieve" \
     {
       "unit": {
         "id": "...",
-        "memory_type": "Fact",
+        "memory_type": "factual",
         "content": "...",
         "keywords": ["rust", "systems"],
         "level": 1
@@ -115,21 +111,21 @@ curl -s -X POST "$BASE_URL/v1/users/$USER_ID/streams/$STREAM_ID/retrieve" \
 }
 ```
 
-重要响应字段：
+关键响应字段：
 
-- `results[].unit.level`：检索到的记忆在层级中的位置
-- `results[].unit.memory_type`：匹配的记忆单元类型
-- `score`：检索融合（Retrieval Fusion）后的最终排名分数
-- `query_time_ms`：检索调用的服务端观测延迟
+- `results[].unit.level`：命中的记忆位于哪一层
+- `results[].unit.memory_type`：`factual` 或 `procedural`
+- `score`：检索融合后的最终排序分数
+- `query_time_ms`：服务端观测到的检索耗时
 
-## 6. 检查整合积压
+## 6. 检查 consolidation backlog
 
 ```bash
 curl -s "$BASE_URL/v1/status/pending" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-当 `"ready": true` 时，当前待处理事件积压已清空。
+当 `"ready": true` 时，当前待处理事件积压已经清空。
 
 ## 下一步
 

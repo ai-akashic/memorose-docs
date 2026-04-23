@@ -1,114 +1,124 @@
 ---
 title: Configuration
-description: Configure Memorose runtime, storage, and deployment behavior.
+description: Configure the current Memorose runtime, including `llm`, `storage`, `worker`, `raft`, and environment overrides.
 ---
 
 # Configuration
 
-Memorose reads configuration from `config.toml` plus environment variables. The current config surface is broader than the earlier docs versions and should be treated as infrastructure configuration, not just storage tuning.
+Memorose reads runtime configuration from `config.toml`, `MEMOROSE__*` environment overrides, and a small set of legacy environment variables.
 
-## Main Files
+The current runtime config is defined by `AppConfig` in `crates/memorose-common/src/config.rs`. That is the source of truth for what the server actually reads.
 
-- `config.toml`: runtime and storage behavior
-- `.env`: provider keys and environment-specific overrides
-- `.env.example`: current env variable reference
-- `config.example.toml`: current config shape reference
+## Main files
 
-## Current Top-Level Sections
+- `config.toml`: runtime configuration file loaded by the server
+- `.env`: local environment variables loaded by helper scripts such as `./scripts/start_cluster.sh`
+- `.env.example`: example provider keys and common environment overrides
+- `crates/memorose-common/src/config.rs`: current runtime config schema and defaults
+
+## Current top-level config sections
+
+The current server config is organized around:
 
 ```toml
-[server]
-[database]
-[database.rocksdb]
-[database.lance]
-[database.tantivy]
-[consolidation]
-[consolidation.llm]
-[forgetting]
-[graph]
+[llm]
+[storage]
 [raft]
-[cache]
-[multimodal]
-[security]
-[telemetry]
-[development]
+[worker]
+[sharding]
+[reranker]
 ```
 
-## Minimal Example
+Notes:
+
+- `sharding` is optional.
+- `reranker` is optional and defaults to the built-in weighted reranker.
+- Older templates in this repo such as `config.example.toml` and `config.toml.example` are not fully aligned with the current runtime schema.
+
+## Minimal working example
 
 ```toml
-[server]
-host = "0.0.0.0"
-port = 3000
+[llm]
+provider = "Gemini"
+model = "gemini-2.0-flash"
+embedding_model = "text-embedding-004"
 
-[database]
-data_dir = "./data"
-wal_sync_mode = "normal"
-
-[consolidation]
-enabled = true
-interval_secs = 10
-batch_size = 100
-entropy_threshold = 2.5
-similarity_threshold = 0.7
-
-[consolidation.llm]
-provider = "gemini"
-model = "gemini-3.1-flash-lite-preview"
-embedding_model = "gemini-embedding-2-preview"
-max_retries = 3
-timeout_secs = 30
-temperature = 0.3
-
-[forgetting]
-enabled = true
-decay_half_life_days = 30
-min_importance = 0.1
-prune_interval_secs = 3600
-
-[graph]
-auto_link_threshold = 0.7
-max_edges_per_node = 100
-enable_page_rank = true
-enable_community_detection = true
+[storage]
+root_dir = "./data/node-1"
+index_commit_interval_ms = 5000
 
 [raft]
-node_id = "node1"
+node_id = 1
 raft_addr = "127.0.0.1:5001"
+heartbeat_interval_ms = 500
+election_timeout_min_ms = 1500
+election_timeout_max_ms = 3000
+snapshot_logs = 1000000
+auto_initialize = true
+
+[worker]
+llm_concurrency = 5
+decay_interval_secs = 60
+prune_threshold = 0.1
+consolidation_interval_ms = 1000
+community_interval_ms = 1000
+insight_interval_ms = 30000
+enable_auto_planner = true
+enable_task_reflection = true
+auto_link_similarity_threshold = 0.6
+tick_interval_ms = 100
 ```
 
-## Environment Variables
+## Environment variables
 
-Common environment variables from `.env.example`:
+There are two supported patterns:
+
+### 1. Nested runtime overrides via `MEMOROSE__`
+
+Use `MEMOROSE__SECTION__KEY=value` to override nested config fields.
 
 ```bash
-LLM_PROVIDER=gemini
-GOOGLE_API_KEY=your_google_api_key_here
-LLM_MODEL=gemini-3.1-flash-lite-preview
-EMBEDDING_MODEL=gemini-embedding-2-preview
-MEMOROSE_WORKER__CONSOLIDATION_INTERVAL_MS=1000
-MEMOROSE_WORKER__LLM_CONCURRENCY=5
-MEMOROSE_WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
+MEMOROSE__WORKER__CONSOLIDATION_INTERVAL_MS=1000
+MEMOROSE__WORKER__LLM_CONCURRENCY=5
+MEMOROSE__WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
+MEMOROSE__RAFT__AUTO_INITIALIZE=true
 ```
 
-Use `DASHBOARD_ADMIN_PASSWORD` to replace the default dashboard password.
+### 2. Legacy direct overrides
 
-## What Each Section Controls
+The server still reads these directly:
 
-- `[server]`: bind address, port, worker count
-- `[database]`: on-disk layout and engine-specific tuning
-- `[consolidation]`: L0 to L1 extraction cadence and acceptance thresholds
-- `[forgetting]`: decay and pruning of low-value memory
-- `[graph]`: auto-linking and community detection
-- `[raft]`: clustering, election timing, membership, snapshots
-- `[cache]`: cached query behavior
-- `[multimodal]`: image, audio, and video processing toggles
-- `[security]`: auth and rate limiting
-- `[telemetry]`: logs, metrics, tracing
-- `[development]`: mock LLMs, debug settings, test determinism
+```bash
+GOOGLE_API_KEY=your_google_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+LLM_MODEL=gemini-2.0-flash
+EMBEDDING_MODEL=text-embedding-004
+NODE_ID=1
+RAFT_ADDR=127.0.0.1:5001
+```
+
+Operational helpers also use:
+
+```bash
+DASHBOARD_ADMIN_PASSWORD=change-me
+```
+
+Important:
+
+- `LLM_PROVIDER` appears in `.env.example`, but the current server config loader does not directly map that variable into `llm.provider`.
+- If you want to switch provider through env only, prefer `MEMOROSE__LLM__PROVIDER=OpenAI` or `MEMOROSE__LLM__PROVIDER=Gemini`.
+
+## What each section controls
+
+- `[llm]`: provider, API endpoint, model names, embedding settings, optional STT settings
+- `[storage]`: root data directory and index commit / recent-overlay behavior
+- `[raft]`: node identity, raft address, election timing, snapshots, bootstrap behavior
+- `[worker]`: consolidation cadence, forgetting, insight generation, task reflection, and auto-link tuning
+- `[sharding]`: multi-shard deployment settings and physical node mapping
+- `[reranker]`: built-in weighted reranking or external HTTP reranker
 
 ## Guidance
 
-- Use `config.example.toml` as the canonical template.
-- Use `.env.example` as the canonical provider and worker override reference.
-- Avoid older docs examples that mention `[storage]`, `[dashboard]`, or `/health`; those reflect a previous API/config model.
+- Treat `crates/memorose-common/src/config.rs` as the canonical schema.
+- Treat `.env.example` as an example convenience file, not as a complete description of all runtime behavior.
+- Be careful with older docs or examples that refer to `[server]`, `[database]`, `[consolidation]`, `[forgetting]`, `[graph]`, `/health`, or `/api/v1/*`; those do not represent the current server config and API surface.

@@ -21,8 +21,10 @@ POST /v1/dashboard/auth/login
 
 默认凭据为 `admin` / `admin`，除非你设置了 `DASHBOARD_ADMIN_PASSWORD`。
 
+如果 dashboard 仍在使用初始化管理员密码，首次登录响应里可能包含 `must_change_password: true`。
+
 <Warning>
-**Docker 部署：** 如果你通过自定义 `docker-compose.yml` 或 `docker run` 部署仪表盘，**必须**为仪表盘容器设置 `DASHBOARD_API_ORIGIN` 环境变量，使其指向后端 API（例如 `DASHBOARD_API_ORIGIN=http://memorose:3000`）。如果省略此配置，仪表盘将尝试在自身容器内向 `127.0.0.1` 代理登录请求，导致 `connect ECONNREFUSED 127.0.0.1:3000` 错误。
+**Docker 部署：** 如果你通过自定义 `docker-compose.yml` 或 `docker run` 部署仪表盘，**必须**为仪表盘容器设置 `DASHBOARD_API_ORIGIN` 环境变量，使其指向后端 API，例如 `DASHBOARD_API_ORIGIN=http://memorose-node-0:3000`。如果省略此配置，仪表盘将尝试在自身容器内向 `127.0.0.1` 代理登录请求，导致 `connect ECONNREFUSED 127.0.0.1:3000` 错误。
 </Warning>
 
 ## 主要功能
@@ -32,8 +34,10 @@ POST /v1/dashboard/auth/login
 - 搜索试验场
 - 语义遗忘/更新预览流程
 - 纠正审核队列
+- 纠正审核的批准 / 拒绝操作
 - 集群状态
 - 智能体指标（Agent Metrics）
 - 组织管理
+- API key 管理
 - 组织知识视图
 - 运行时配置检查

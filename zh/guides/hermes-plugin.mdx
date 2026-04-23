@@ -1,0 +1,135 @@
+---
+title: Hermes Memorose 插件
+description: 将 Hermes Agent 接入 Memorose，作为长期记忆提供方。
+---
+
+# Hermes Memorose 插件
+
+`hermes-memorose-plugin` 仓库提供了一个独立的 Hermes 记忆提供方，名称为 `memorose`。
+当 Hermes Agent 运行时需要通过现有 Memorose 服务读写长期记忆时，使用这个插件。
+
+## 前置条件
+
+- 已运行的 Memorose 服务。本地开发通常是 `http://127.0.0.1:3000`。
+- Memorose API Key。可在 Dashboard 的 API Key 管理页面创建。
+- 已安装 Hermes Agent，并启用插件能力。
+
+## 安装插件
+
+使用 GitHub shorthand 安装：
+
+```bash
+hermes plugins install ai-akashic/hermes-memorose-plugin
+```
+
+也可以使用完整 Git URL：
+
+```bash
+hermes plugins install https://github.com/ai-akashic/hermes-memorose-plugin.git
+```
+
+Hermes 会读取 `plugin.yaml`，并将该记忆提供方安装为 `memorose`。插件声明的 Python 依赖是 `memorose>=0.1.1`。
+
+## 配置 Hermes
+
+运行 Hermes 的记忆提供方配置流程：
+
+```bash
+hermes memory setup
+```
+
+按提示选择 `memorose`。配置流程会要求填写：
+
+- `MEMOROSE_API_KEY`，作为 secret 环境变量保存。
+- `base_url`，默认值为 `http://127.0.0.1:3000`。
+
+也可以手动启用该 provider：
+
+```bash
+hermes config set memory.provider memorose
+```
+
+Hermes 会把非 secret 的 provider 配置保存到 `$HERMES_HOME/memorose.json`：
+
+```json
+{
+  "base_url": "http://127.0.0.1:3000",
+  "org_id": "default",
+  "retrieve": {
+    "limit": 8,
+    "min_score": 0.0,
+    "graph_depth": 1
+  },
+  "sync": {
+    "mode": "user_only"
+  }
+}
+```
+
+`org_id` 是可选字段。如果 Agent 只需要用户级记忆，可以省略。
+
+## 运行时映射
+
+该插件有意保持身份和 stream 路由规则严格：
+
+- Hermes runtime 必须在初始化 provider 时传入 `user_id`。
+- 缺少 `user_id` 会直接报错。
+- Hermes 的 `session_id` 会直接作为 Memorose 的 `stream_id`。
+- 插件不支持其他 stream 路由策略。
+
+这意味着每个 Hermes session 会写入同一用户下对应的 Memorose stream。
+
+## 检索与同步
+
+构造 prompt 时，provider 可以从 Memorose 预取上下文，并格式化后交给 Hermes 使用。
+
+`memorose.json` 中的 retrieve 配置会映射到 Memorose retrieve request：
+
+- `retrieve.limit` 控制最多返回多少条记忆。
+- `retrieve.min_score` 过滤低分检索结果。
+- `retrieve.graph_depth` 控制匹配记忆周围的图谱扩展深度。
+
+对话同步由 `sync.mode` 控制：
+
+- `user_only` 只写入用户消息。这是默认值。
+- `user_and_assistant` 同时写入用户消息和助手消息。
+
+## 暴露给 Hermes 的工具
+
+当 `memorose` 是当前启用的记忆提供方时，Hermes 会暴露以下工具：
+
+- `memorose_search`：搜索 Memorose 中的长期记忆。
+- `memorose_store`：向当前 user/session stream 写入新的记忆事件。
+- `memorose_delete`：按 ID 删除当前用户的一条记忆。
+- `memorose_status`：返回连接、路由和待处理任务状态。
+- `memorose_tasks`：返回用户级任务树和 ready tasks。
+
+## CLI 状态检查
+
+使用 Hermes 插件命令验证路由和连接状态：
+
+```bash
+hermes memorose status --hermes-home "$HERMES_HOME" --user-id "<user_id>" --session-id "<session_id>"
+```
+
+## 排障
+
+### `MEMOROSE_API_KEY is required`
+
+请在 Hermes 使用的运行环境中设置 `MEMOROSE_API_KEY`。API Key 不会写入 `memorose.json`。
+
+### `Memorose provider requires Hermes runtime user_id`
+
+确认 Hermes 集成在初始化记忆 provider 时提供了稳定的外部 `user_id`。插件不会降级为本地匿名用户。
+
+### 请求打到了错误的服务地址
+
+检查 `$HERMES_HOME/memorose.json` 中的 `base_url`。Docker 或远程部署通常不能使用 `http://127.0.0.1:3000`。
+
+### 助手消息没有被写入
+
+如果 `sync.mode` 是 `user_only`，这是预期行为。需要写入助手消息时，将其改为 `user_and_assistant`。
+
+## 源码仓库
+
+插件源码位于 `hermes-memorose-plugin`，安装到 Hermes 后的 provider 名称是 `memorose`。

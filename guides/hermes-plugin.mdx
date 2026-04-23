@@ -1,0 +1,135 @@
+---
+title: Hermes Memorose Plugin
+description: Connect Hermes Agent to Memorose as a long-term memory provider.
+---
+
+# Hermes Memorose Plugin
+
+The `hermes-memorose-plugin` repository provides a standalone Hermes memory provider named `memorose`.
+Use it when a Hermes Agent runtime should read and write long-term memory through an existing Memorose server.
+
+## Prerequisites
+
+- A running Memorose server, usually at `http://127.0.0.1:3000` for local development.
+- A Memorose API key. Create one from the dashboard API key management page.
+- Hermes Agent installed with plugin support.
+
+## Install The Plugin
+
+Install from the GitHub shorthand:
+
+```bash
+hermes plugins install ai-akashic/hermes-memorose-plugin
+```
+
+Or install from the full Git URL:
+
+```bash
+hermes plugins install https://github.com/ai-akashic/hermes-memorose-plugin.git
+```
+
+Hermes reads `plugin.yaml` and installs the provider as `memorose`. The plugin declares the Python dependency `memorose>=0.1.1`.
+
+## Configure Hermes
+
+Run the Hermes memory setup flow:
+
+```bash
+hermes memory setup
+```
+
+Select `memorose` when prompted. The setup flow asks for:
+
+- `MEMOROSE_API_KEY` as a secret environment variable.
+- `base_url`, defaulting to `http://127.0.0.1:3000`.
+
+You can also activate the provider manually:
+
+```bash
+hermes config set memory.provider memorose
+```
+
+Hermes stores non-secret provider settings in `$HERMES_HOME/memorose.json`:
+
+```json
+{
+  "base_url": "http://127.0.0.1:3000",
+  "org_id": "default",
+  "retrieve": {
+    "limit": 8,
+    "min_score": 0.0,
+    "graph_depth": 1
+  },
+  "sync": {
+    "mode": "user_only"
+  }
+}
+```
+
+`org_id` is optional. Omit it if the agent should use user-scoped memory only.
+
+## Runtime Mapping
+
+The plugin intentionally keeps identity and stream routing strict:
+
+- Hermes runtime must pass `user_id` during provider initialization.
+- Missing `user_id` is a hard error.
+- Hermes `session_id` is used directly as the Memorose `stream_id`.
+- The plugin does not implement alternate stream routing strategies.
+
+This mapping means each Hermes session writes to the corresponding Memorose stream for the same user.
+
+## Retrieval And Sync
+
+During prompt construction, the provider can prefetch context from Memorose and format it for Hermes.
+
+The retrieve options in `memorose.json` map to the Memorose retrieve request:
+
+- `retrieve.limit` controls the maximum number of memories returned.
+- `retrieve.min_score` filters low-scoring retrieval results.
+- `retrieve.graph_depth` enables graph expansion around matching memories.
+
+Turn sync uses `sync.mode`:
+
+- `user_only` stores user turns only. This is the default.
+- `user_and_assistant` stores both user and assistant turns.
+
+## Tools Exposed To Hermes
+
+When `memorose` is the active memory provider, Hermes exposes these tools:
+
+- `memorose_search` searches long-term memory stored in Memorose.
+- `memorose_store` stores a new memory event in the current user/session stream.
+- `memorose_delete` deletes a memory by ID for the current user.
+- `memorose_status` returns connectivity, routing, and pending-work status.
+- `memorose_tasks` returns user-level task trees and ready tasks.
+
+## CLI Status Check
+
+Use the Hermes plugin command to verify routing and connectivity:
+
+```bash
+hermes memorose status --hermes-home "$HERMES_HOME" --user-id "<user_id>" --session-id "<session_id>"
+```
+
+## Troubleshooting
+
+### `MEMOROSE_API_KEY is required`
+
+Set `MEMOROSE_API_KEY` in the environment used by Hermes. The API key is not stored in `memorose.json`.
+
+### `Memorose provider requires Hermes runtime user_id`
+
+Ensure the Hermes integration supplies a stable external `user_id` when initializing the memory provider. The plugin does not fall back to a local anonymous user.
+
+### Requests fail against the wrong server
+
+Check `base_url` in `$HERMES_HOME/memorose.json`. Docker and remote deployments usually need an address other than `http://127.0.0.1:3000`.
+
+### Assistant messages are not stored
+
+This is expected when `sync.mode` is `user_only`. Change it to `user_and_assistant` if assistant turns should also be ingested.
+
+## Source Repository
+
+The plugin lives in `hermes-memorose-plugin` and is installed as the Hermes provider named `memorose`.

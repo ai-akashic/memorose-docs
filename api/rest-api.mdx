@@ -1,6 +1,6 @@
 ---
 title: REST API
-description: Complete endpoint reference for the Memorose v1 HTTP API.
+description: Current endpoint reference for the Memorose v1 HTTP API.
 ---
 
 # REST API Reference
@@ -25,27 +25,29 @@ POST /v1/dashboard/auth/login
 ```
 
 <Note>
-Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/health` are from an older product model and should not be used for current integrations.
+Older examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/health` are from an older product model and should not be used for current integrations.
 </Note>
 
-## Route Groups
+## Route groups
 
-### Public Login
+### Public login
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/v1/dashboard/auth/login` | Get dashboard JWT token |
 
-### Memory Runtime
+### Memory runtime
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/v1/users/:user_id/streams/:stream_id/events` | Ingest an event |
+| `POST` | `/v1/users/:user_id/streams/:stream_id/events` | Ingest one event |
+| `POST` | `/v1/users/:user_id/streams/:stream_id/events/batch` | Ingest a batch of events |
 | `POST` | `/v1/users/:user_id/streams/:stream_id/retrieve` | Hybrid retrieval |
+| `POST` | `/v1/memory/context` | Render retrieved memory into compact text or XML context |
 | `POST` | `/v1/users/:user_id/graph/edges` | Add graph edge |
 | `GET` | `/v1/status/pending` | Pending event backlog |
 
-### Memory Maintenance
+### Memory maintenance
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -53,7 +55,7 @@ Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/hea
 | `POST` | `/v1/users/:user_id/memories/semantic/preview` | Preview semantic update or forgetting plan |
 | `POST` | `/v1/users/:user_id/memories/semantic/execute` | Execute a reviewed semantic plan |
 
-### Tasks And Goals
+### Tasks and goals
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -62,7 +64,7 @@ Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/hea
 | `GET` | `/v1/users/:user_id/tasks/ready` | Ready-to-run tasks |
 | `PUT` | `/v1/users/:user_id/tasks/:task_id/status` | Update task status |
 
-### Organization Knowledge
+### Organization knowledge
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -70,7 +72,7 @@ Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/hea
 | `GET` | `/v1/organizations/:org_id/knowledge/:id` | Fetch one knowledge record |
 | `GET` | `/v1/organizations/:org_id/knowledge/metrics` | Organization knowledge metrics |
 
-### Cluster Operations
+### Cluster operations
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -78,9 +80,10 @@ Older docs examples that use `/api/v1/*`, `/v1/memories`, `/v1/search`, or `/hea
 | `POST` | `/v1/cluster/join` | Join node to cluster |
 | `DELETE` | `/v1/cluster/nodes/:node_id` | Remove node from cluster |
 
-## Integration Notes
+## Integration notes
 
 - `stream_id` is a UUID path parameter in the current model.
 - For single-node default deployments, Raft auto-bootstrap is enabled by default.
-- The docs treat `README.md`, `config.example.toml`, `.env.example`, and `crates/memorose-server/src/main.rs` as the source of truth.
-- If you are building your own client, start from [Quickstart](/getting-started/quickstart) and then fan out into the dedicated endpoint pages.
+- `memory_type` values are serialized as `factual` and `procedural`.
+- Treat `crates/memorose-server/src/main.rs` and `crates/memorose-server/src/types.rs` as the authoritative route and payload definitions.
+- Treat `crates/memorose-common/src/config.rs` as the authoritative runtime config schema.

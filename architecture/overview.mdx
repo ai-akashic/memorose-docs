@@ -5,7 +5,7 @@ description: Workspace shape, runtime pipeline, key concepts, and deployment mod
 
 # Architecture Overview
 
-Memorose is a memory runtime for agents. The system ingests raw events, consolidates them into durable memory, derives higher-order insights, tracks goal execution, and exposes all of that through a Rust server, a dashboard, and Raft-backed deployment primitives.
+Memorose is a memory runtime for agents. The system ingests raw events, consolidates them into durable memory, derives higher-order insights, tracks goal execution, and exposes all of that through a Rust server, a dashboard, and optional gateway plus Raft-backed deployment primitives.
 
 ## System Architecture
 
@@ -16,12 +16,14 @@ graph TB
     Dashboard["Dashboard UI :3100"]
   end
 
-  subgraph Gateway
+  subgraph OptionalGateway["Optional Gateway"]
     GW["Gateway :8080<br/>Stateless Router"]
   end
 
-  SDK --> GW
-  Dashboard --> GW
+  SDK --> API
+  Dashboard --> API
+  SDK -.->|"optional"| GW
+  GW -.->|"optional shard routing"| API
 
   subgraph Node["Server Node :3000"]
     direction TB
@@ -55,8 +57,6 @@ graph TB
     Worker -.->|"LLM"| LLM["Gemini / OpenAI"]
   end
 
-  GW -->|"Shard Routing"| API
-
   subgraph Cluster["Raft Cluster"]
     direction LR
     N1["Node 1"]
@@ -68,7 +68,7 @@ graph TB
   end
 
   style Clients fill:#f9fafb,stroke:#d1d5db,color:#111827
-  style Gateway fill:#f3f4f6,stroke:#9ca3af,color:#111827
+  style OptionalGateway fill:#f3f4f6,stroke:#9ca3af,color:#111827
   style Node fill:#f9fafb,stroke:#6b7280,color:#111827
   style Engine fill:#e5e7eb,stroke:#6b7280,color:#111827
   style Worker fill:#e5e7eb,stroke:#6b7280,color:#111827
@@ -110,7 +110,8 @@ graph LR
 crates/
 ├── memorose-common    # shared config, core types, task and graph models
 ├── memorose-core      # engine, storage, retrieval, graph, organization knowledge
-└── memorose-server    # Axum API, dashboard auth, management routes
+├── memorose-server    # Axum API, dashboard auth, management routes
+└── memorose-gateway   # optional stateless shard router
 ```
 
 ## Runtime Pipeline
@@ -171,6 +172,7 @@ Retrieval is hybrid by design. Queries can combine:
 - Single-node mode for local development
 - Raft-based clustering for replicated deployment
 - Sharded topologies for larger installations
+- Optional gateway routing layer for some deployments
 - Separate dashboard UI on port `3100`
 
 This is infrastructure software first. The docs should be read with that model in mind.

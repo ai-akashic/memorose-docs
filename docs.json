@@ -44,6 +44,7 @@
                   "guides/tasks-and-goals",
                   "guides/organization-knowledge",
                   "guides/knowledge-graph",
+                  "guides/hermes-plugin",
                   "guides/dashboard",
                   "guides/distributed-deployment",
                   "guides/multimodal-ingest",
@@ -51,7 +52,7 @@
                 ]
               },
               {
-                "group": "SDKs",
+                "group": "HTTP Client Patterns",
                 "pages": [
                   "sdks/overview",
                   "sdks/python",
@@ -129,6 +130,7 @@
                   "zh/guides/tasks-and-goals",
                   "zh/guides/organization-knowledge",
                   "zh/guides/knowledge-graph",
+                  "zh/guides/hermes-plugin",
                   "zh/guides/dashboard",
                   "zh/guides/distributed-deployment",
                   "zh/guides/multimodal-ingest",
@@ -136,7 +138,7 @@
                 ]
               },
               {
-                "group": "SDK",
+                "group": "HTTP 客户端模式",
                 "pages": [
                   "zh/sdks/overview",
                   "zh/sdks/python",

@@ -1,11 +1,11 @@
 ---
 title: Dashboard API
-description: 驱动 Memorose 仪表盘 UI 的内部 API 路由。
+description: 驱动 Memorose dashboard UI 的内部 API 路由。
 ---
 
 # Dashboard API
 
-仪表盘（Dashboard）路由嵌套在 `/v1/dashboard` 下，为运维 UI 提供支持。这些是内部端点（endpoint）——终端用户直接与仪表盘 UI 交互。
+Dashboard 路由位于 `/v1/dashboard` 下，为运维 UI 提供支持。
 
 ## 认证
 
@@ -13,7 +13,7 @@ description: 驱动 Memorose 仪表盘 UI 的内部 API 路由。
 POST /v1/dashboard/auth/login
 ```
 
-默认凭据为 `admin` / `admin`，除非你设置了 `DASHBOARD_ADMIN_PASSWORD`。
+默认凭据是 `admin` / `admin`，除非设置了 `DASHBOARD_ADMIN_PASSWORD`。登录响应里还可能包含 `must_change_password`。
 
 ## 路由
 
@@ -21,42 +21,50 @@ POST /v1/dashboard/auth/login
 
 | 方法 | 端点 | 用途 |
 | --- | --- | --- |
-| `POST` | `/v1/dashboard/auth/login` | 获取仪表盘 JWT 令牌（token） |
-| `POST` | `/v1/dashboard/auth/password` | 修改仪表盘密码 |
+| `POST` | `/v1/dashboard/auth/login` | 获取 dashboard JWT token |
+| `POST` | `/v1/dashboard/auth/password` | 修改 dashboard 密码 |
 
 ### 统计与记忆
 
 | 方法 | 端点 | 用途 |
 | --- | --- | --- |
 | `GET` | `/v1/dashboard/stats` | 全局系统统计 |
-| `GET` | `/v1/dashboard/memories` | 列出记忆单元（memory units） |
-| `GET` | `/v1/dashboard/memories/:id` | 获取特定记忆的详情 |
+| `GET` | `/v1/dashboard/memories` | 列出记忆单元 |
+| `GET` | `/v1/dashboard/memories/:id` | 获取单条记忆详情 |
 
 ### 图谱与搜索
 
 | 方法 | 端点 | 用途 |
 | --- | --- | --- |
-| `GET` | `/v1/dashboard/graph` | 获取图谱数据用于探索 |
-| `POST` | `/v1/dashboard/search` | 搜索试验场端点 |
-| `POST` | `/v1/dashboard/chat` | 聊天/查询试验场 |
+| `GET` | `/v1/dashboard/graph` | 获取图谱数据 |
+| `POST` | `/v1/dashboard/search` | 搜索实验接口 |
+| `POST` | `/v1/dashboard/chat` | 聊天 / 查询实验接口 |
 
-### 遗忘与纠正
+### 遗忘与纠错
 
 | 方法 | 端点 | 用途 |
 | --- | --- | --- |
-| `POST` | `/v1/dashboard/forget/preview` | 预览语义遗忘（semantic forgetting）计划 |
+| `POST` | `/v1/dashboard/forget/preview` | 预览遗忘计划 |
 | `POST` | `/v1/dashboard/forget/execute` | 执行遗忘计划 |
-| `POST` | `/v1/dashboard/corrections/semantic/preview` | 预览语义纠正 |
-| `POST` | `/v1/dashboard/corrections/semantic/execute` | 执行语义纠正 |
-| `POST` | `/v1/dashboard/corrections/manual` | 手动纠正 |
-| `GET` | `/v1/dashboard/corrections/reviews` | 获取审核队列 |
+| `POST` | `/v1/dashboard/corrections/semantic/preview` | 预览语义纠错 |
+| `POST` | `/v1/dashboard/corrections/semantic/execute` | 执行语义纠错 |
+| `POST` | `/v1/dashboard/corrections/manual` | 应用手动纠错 |
+| `GET` | `/v1/dashboard/corrections/reviews` | 列出纠错审核记录 |
+| `POST` | `/v1/dashboard/corrections/reviews/:review_id/approve` | 批准单条审核 |
+| `POST` | `/v1/dashboard/corrections/reviews/:review_id/reject` | 拒绝单条审核 |
 
-### 运维操作
+### 运维与管理
 
 | 方法 | 端点 | 用途 |
 | --- | --- | --- |
 | `GET` | `/v1/dashboard/config` | 查看运行时配置 |
-| `GET` | `/v1/dashboard/agents` | 监控代理（agent）指标 |
-| `GET` | `/v1/dashboard/cluster/status` | 检查集群健康状态和节点 |
-| `GET` | `/v1/dashboard/organizations` | 列出托管的组织 |
+| `GET` | `/v1/dashboard/agents` | agent 相关运行指标 |
+| `GET` | `/v1/dashboard/cluster/status` | 集群健康和节点状态 |
+| `GET` | `/v1/dashboard/organizations` | 列出组织 |
 | `POST` | `/v1/dashboard/organizations` | 创建组织 |
+| `GET` | `/v1/dashboard/api-keys` | 列出 dashboard 管理的 API key |
+| `POST` | `/v1/dashboard/api-keys` | 创建 API key |
+| `DELETE` | `/v1/dashboard/api-keys/:key_id` | 吊销 API key |
+| `GET` | `/v1/dashboard/organizations/:org_id/knowledge` | 列出组织知识 |
+| `GET` | `/v1/dashboard/organizations/:org_id/knowledge/:id` | 获取单条知识记录 |
+| `GET` | `/v1/dashboard/organizations/:org_id/knowledge/metrics` | 组织知识指标 |

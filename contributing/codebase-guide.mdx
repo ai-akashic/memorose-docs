@@ -1,27 +1,27 @@
 ---
 title: Codebase Guide
-description: A walkthrough of the Memorose workspace layout, crate responsibilities, and key modules.
+description: A walkthrough of the current Memorose workspace layout, crate responsibilities, and key modules.
 ---
 
 # Codebase Guide
 
-## Workspace Layout
+## Workspace layout
 
 Memorose is a Cargo workspace with four crates plus a Next.js dashboard:
 
 ```text
 Memorose/
   crates/
-    memorose-common/    # Shared types, config, serialization
-    memorose-core/      # Core engine — storage, LLM, worker, graph
-    memorose-server/    # Axum HTTP server, Raft consensus, dashboard auth
-    memorose-gateway/   # Stateless gateway, tenant sharding
-  dashboard/            # Next.js frontend (TypeScript / React)
-  scripts/              # Dev helpers (start_cluster.sh, build_dashboard.sh)
-  examples/             # SDK examples and integrations
+    memorose-common/    # Shared types and config loading
+    memorose-core/      # Core engine, retrieval, storage, graph, worker logic
+    memorose-server/    # Axum HTTP server and dashboard-backed API surface
+    memorose-gateway/   # Stateless gateway for shard routing
+  dashboard/            # Next.js frontend
+  scripts/              # Local dev helpers
+  examples/             # Example clients and integrations
 ```
 
-## Crate Dependency Graph
+## Crate dependency graph
 
 ```text
 memorose-server ──┐
@@ -29,101 +29,90 @@ memorose-server ──┐
 memorose-gateway ─┘
 ```
 
-- **memorose-common** has no internal dependencies — it is pure types and config.
-- **memorose-core** depends on `memorose-common` and contains all business logic.
-- **memorose-server** and **memorose-gateway** both depend on `memorose-core` and `memorose-common`.
-
-## Crate Responsibilities
+## Crate responsibilities
 
 ### memorose-common
 
-Shared foundations used by every other crate:
+Shared foundations used by the rest of the workspace:
 
-- `Event`, `EventContent`, `Memory` domain types
-- Configuration loading — TOML file + environment variable overrides
-- Serialization helpers (serde, chrono, uuid)
-- Error types (thiserror)
+- core types such as `Event`, `EventContent`, `MemoryUnit`, `GraphEdge`, and `L3Task`
+- runtime config loading in `src/config.rs`
+- serialization helpers and shared enums
 
 ### memorose-core
 
-The bulk of the codebase. Key modules:
+Business logic and storage orchestration:
 
 | Module | Path | Role |
 | --- | --- | --- |
-| `engine/` | `src/engine/` | `MemoroseEngine` — main orchestrator with ~17 submodules for memory operations |
-| `storage/` | `src/storage/` | Multi-backend abstraction (see below) |
-| `worker.rs` | `src/worker.rs` | Background consolidation pipeline: L0 → L1 → L2, decay, pruning, community detection |
-| `llm/` | `src/llm/` | LLM provider abstraction — Gemini, OpenAI, and Mock implementations |
-| `graph/` | `src/graph/` | Knowledge graph operations, community detection (Louvain / LPA) |
-| `ingest/` | `src/ingest/` | Event ingestion pipeline |
-| `raft/` | `src/raft/` | Distributed consensus via openraft |
-| `fact_extraction.rs` | `src/fact_extraction.rs` | LLM-based fact extraction from raw events |
-| `arbitrator.rs` | `src/arbitrator.rs` | Conflict resolution between overlapping memories |
-| `reranker.rs` | `src/reranker.rs` | Search result reranking |
+| `engine/` | `src/engine/` | `MemoroseEngine` orchestration and domain workflows |
+| `storage/` | `src/storage/` | RocksDB, vector, text, blob, and system metadata backends |
+| `worker.rs` | `src/worker.rs` | background consolidation, forgetting, insights, and related cycles |
+| `llm/` | `src/llm/` | Gemini and OpenAI provider clients |
+| `graph/` | `src/graph/` | graph storage, traversal, cache, and query helpers |
+| `ingest/` | `src/ingest/` | multimodal ingest helpers |
+| `raft/` | `src/raft/` | openraft integration |
+| `arbitrator.rs` | `src/arbitrator.rs` | memory conflict and correction planning |
+| `reranker.rs` | `src/reranker.rs` | weighted or external reranking |
 
-### Storage Backends
+### Storage backends
 
 All under `memorose-core/src/storage/`:
 
 | File | Backend | Purpose |
 | --- | --- | --- |
-| `kv.rs` | RocksDB | Key-value store for L0 raw events |
-| `index.rs` | LanceDB + Tantivy | Vector index (LanceDB) + full-text index (Tantivy) for L1 memories |
-| `graph.rs` | Custom | Knowledge graph storage for L2 insights |
-| `blob.rs` | File system | Blob storage for multimodal content |
-| `system_kv.rs` | RocksDB | System metadata and internal state |
-| `tests.rs` | — | Comprehensive storage test suite |
+| `kv.rs` | RocksDB | durable key-value storage for events and memory units |
+| `index.rs` | LanceDB + Tantivy | vector and text indexing |
+| `graph.rs` | custom | graph edge persistence |
+| `blob.rs` | file system | asset storage |
+| `system_kv.rs` | RocksDB | internal metadata, jobs, and control state |
 
 ### memorose-server
 
 The HTTP layer:
 
-- `main.rs` — Axum routes, Raft node bootstrap, API handlers
-- `shard_manager.rs` — Shard-to-node routing logic
-- `types.rs` — API request / response types
-- `dashboard/` — Dashboard authentication and handler endpoints
+- `main.rs`: route definitions and server bootstrap
+- `types.rs`: request / response payload types
+- `shard_manager.rs`: shard routing and cluster coordination helpers
+- `dashboard/`: auth and handler modules backing dashboard and management endpoints
 
 ### memorose-gateway
 
-A stateless HTTP proxy that sits in front of server nodes:
+The stateless routing layer used in some deployments:
 
-- Routes requests to the correct shard based on `user_id`
-- Handles tenant isolation via URL path
-- No persistent state of its own
+- maps requests to backend nodes by shard
+- reads gateway-specific env vars such as `SHARD_COUNT`
+- does not own persistent state
 
-## Dashboard Frontend
+## Dashboard frontend
 
-The `dashboard/` directory is a standard Next.js app:
+The `dashboard/` app currently contains:
 
 ```text
 dashboard/src/
   app/           # Next.js app router pages
-  components/    # React components
+  components/    # UI components
   lib/
-    api.ts       # API client — all calls go through fetchAPI() with Bearer auth
-    hooks.ts     # SWR hooks for data fetching
-    types.ts     # TypeScript type definitions
+    api.ts       # API helpers
+    auth.ts      # auth helpers
+    hooks.ts     # SWR hooks
+    types.ts     # TypeScript API types
 ```
 
-**Patterns to follow:**
-- All API calls go through `fetchAPI()` in `lib/api.ts`
-- Data fetching uses SWR hooks defined in `lib/hooks.ts`
-- Types mirror the Rust server types in `lib/types.ts`
+## Useful patterns
 
-## Key Patterns
+### Dashboard cache
 
-### SQL Filter Builder
+Dashboard API responses are cached with `state.dashboard_cache`.
 
-`build_user_filter(user_id, app_id, extra)` constructs SQL WHERE clauses for LanceDB queries. Used across vector search operations.
+### Bitemporal and scoped retrieval
 
-### KV Scan
+Retrieval supports valid-time, transaction-time, `org_id`, and `agent_id` inputs through the server request payloads.
 
-Key-value iteration uses `kv.scan(b"u:")` with key window filtering for `:unit:` or `:event:` segments.
+### Route truth
 
-### Dashboard Cache
+When in doubt, treat these as the primary references:
 
-Dashboard API responses are cached with a 5-minute TTL via `state.dashboard_cache` (powered by [moka](https://github.com/moka-rs/moka)).
-
-### Bitemporal Search
-
-`search_bitemporal()` supports both valid-time and transaction-time queries, with optional `agent_id` filtering as the 7th parameter.
+- `crates/memorose-server/src/main.rs`
+- `crates/memorose-server/src/types.rs`
+- `crates/memorose-common/src/config.rs`

@@ -1,13 +1,13 @@
 ---
 title: Testing
-description: How to run tests, understand the test structure, and write new tests for Memorose.
+description: How to run tests and understand the current test structure in Memorose.
 ---
 
 # Testing
 
-## Running Tests
+## Running tests
 
-Run the full test suite:
+Run the full Rust test suite:
 
 ```bash
 cargo test
@@ -25,120 +25,70 @@ cargo test -p memorose-common
 Run a specific test by name:
 
 ```bash
-cargo test -p memorose-core -- test_ingest_and_retrieve
+cargo test -p memorose-core test_ingest_and_retrieve
 ```
 
-## Test Organization
+## Test organization
 
-### Unit Tests
+### Unit tests
 
-Embedded alongside the code they test, using `#[cfg(test)]` modules. Most storage and engine logic has co-located unit tests.
+Most unit tests are co-located with the modules they exercise via `#[cfg(test)]` blocks.
 
-Key test files:
-- `crates/memorose-core/src/storage/tests.rs` — comprehensive storage backend tests
-- Module-level `#[cfg(test)]` blocks throughout `engine/`, `llm/`, and `graph/`
+Common places to inspect:
 
-### Integration Tests
+- `crates/memorose-core/src/engine/tests.rs`
+- module-local `#[cfg(test)]` blocks in `graph/`, `llm/`, `raft/`, `worker.rs`, and dashboard handlers
 
-Located in `crates/memorose-core/tests/integration.rs`. These tests exercise the full ingest → retrieve → mark-processed flow.
+### Integration tests
 
-## Test Patterns
+Current integration tests live in:
 
-### Async Tests
+- `crates/memorose-core/tests/integration.rs`
 
-All I/O-bound tests use `tokio::test`:
+These cover end-to-end ingest and retrieval flows.
 
-```rust
-#[tokio::test]
-async fn test_ingest_and_retrieve() {
-    // ...
-}
-```
+## Common patterns
 
-### Temporary Directories
+### Async tests
 
-Tests that need storage use `tempfile` for isolated data directories:
+I/O-heavy tests typically use `#[tokio::test]`.
 
-```rust
-use tempfile::TempDir;
+### Temporary directories
 
-#[tokio::test]
-async fn test_storage() {
-    let tmp = TempDir::new().unwrap();
-    let config = Config {
-        data_dir: tmp.path().to_path_buf(),
-        ..Default::default()
-    };
-    // storage is fully isolated, cleaned up on drop
-}
-```
+Tests that need isolated storage usually build engines against temp directories rather than shared repo state.
 
-### Mock LLM
+### Mocking external calls
 
-For tests that involve LLM calls, use mock mode to avoid real API calls:
+HTTP-bound tests use `wiremock` in several places, for example in:
 
-```toml
-# config.toml
-[development]
-use_mock_llm = true
-```
+- `crates/memorose-server/src/shard_manager.rs`
+- `crates/memorose-core/src/llm/openai_tests.rs`
+- `crates/memorose-core/src/llm/gemini_tests.rs`
 
-The mock provider returns deterministic responses, making tests reproducible without an API key.
+### LLM behavior in tests
 
-### HTTP Mocking
+There is no current runtime switch in `AppConfig` like `[development].use_mock_llm` that the server loader consumes. In practice, tests use explicit mock client implementations inside Rust test code.
 
-Tests that call external services use `wiremock` for request interception:
+## Writing new tests
 
-```rust
-use wiremock::{MockServer, Mock, ResponseTemplate};
-use wiremock::matchers::method;
+- Put unit tests close to the code they exercise.
+- Put cross-module integration tests under `crates/memorose-core/tests/`.
+- Prefer descriptive names such as `test_hybrid_search_with_agent_filter`.
+- Prefer temp directories over shared on-disk paths.
+- Avoid real provider calls unless you are explicitly validating provider integration.
 
-#[tokio::test]
-async fn test_external_call() {
-    let mock_server = MockServer::start().await;
-    Mock::given(method("POST"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({...})))
-        .mount(&mock_server)
-        .await;
-    // point your client at mock_server.uri()
-}
-```
+## Dashboard checks
 
-## Writing New Tests
-
-### Conventions
-
-- Place unit tests in a `#[cfg(test)]` module at the bottom of the file being tested
-- Place integration tests in `crates/memorose-core/tests/`
-- Use descriptive test names: `test_hybrid_search_with_agent_filter`, not `test_search_2`
-- Clean up any temp resources — prefer `TempDir` over manual directory management
-- Avoid real LLM calls — use mock mode unless you are specifically testing LLM integration
-
-### Typical Integration Test Flow
-
-```rust
-#[tokio::test]
-async fn test_basic_flow() {
-    // 1. Create engine with temp storage
-    let tmp = TempDir::new().unwrap();
-    let engine = create_test_engine(tmp.path()).await;
-
-    // 2. Ingest events
-    engine.ingest_event(user_id, stream_id, event).await.unwrap();
-
-    // 3. Retrieve and verify
-    let results = engine.search_hybrid(query, app_id, None).await.unwrap();
-    assert!(!results.is_empty());
-}
-```
-
-## Dashboard Tests
-
-For the Next.js dashboard:
+For the Next.js dashboard, the currently available scripts are:
 
 ```bash
 cd dashboard
-pnpm test       # run tests
-pnpm lint       # lint check
-pnpm type-check # TypeScript type checking
+pnpm lint
+pnpm build
+```
+
+If you need local interactive verification:
+
+```bash
+pnpm dev
 ```

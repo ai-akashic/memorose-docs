@@ -1,6 +1,6 @@
 ---
 title: REST API 参考
-description: Memorose v1 HTTP API 完整端点参考。
+description: 当前 Memorose v1 HTTP API 的端点参考。
 ---
 
 # REST API 参考
@@ -11,21 +11,21 @@ API 基础地址：
 http://127.0.0.1:3000
 ```
 
-## 认证（Authentication）
+## 认证
 
-当前 `/v1` 路由支持以下两种认证方式：
+当前 `/v1` 路由支持两种认证方式：
 
 - `Authorization: Bearer <dashboard-jwt>`
 - `x-api-key: <api-key>`
 
-本地开发时，最快的方式是：
+本地开发最快的方式是：
 
 ```http
 POST /v1/dashboard/auth/login
 ```
 
 <Note>
-旧版文档中使用 `/api/v1/*`、`/v1/memories`、`/v1/search` 或 `/health` 的示例来自早期产品模型，不应用于当前集成。
+旧示例中出现的 `/api/v1/*`、`/v1/memories`、`/v1/search` 或 `/health` 都来自更早的产品模型，不应再用于当前集成。
 </Note>
 
 ## 路由分组
@@ -34,35 +34,37 @@ POST /v1/dashboard/auth/login
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
-| `POST` | `/v1/dashboard/auth/login` | 获取仪表盘 JWT 令牌 |
+| `POST` | `/v1/dashboard/auth/login` | 获取 dashboard JWT token |
 
-### 记忆运行时（Memory Runtime）
+### 记忆运行时
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
-| `POST` | `/v1/users/:user_id/streams/:stream_id/events` | 写入事件 |
-| `POST` | `/v1/users/:user_id/streams/:stream_id/retrieve` | 混合检索（Hybrid Retrieval） |
+| `POST` | `/v1/users/:user_id/streams/:stream_id/events` | 写入单个事件 |
+| `POST` | `/v1/users/:user_id/streams/:stream_id/events/batch` | 批量写入事件 |
+| `POST` | `/v1/users/:user_id/streams/:stream_id/retrieve` | 混合检索 |
+| `POST` | `/v1/memory/context` | 将检索结果渲染为紧凑 text 或 XML 上下文 |
 | `POST` | `/v1/users/:user_id/graph/edges` | 添加图边 |
 | `GET` | `/v1/status/pending` | 待处理事件积压 |
 
-### 记忆维护（Memory Maintenance）
+### 记忆维护
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
-| `DELETE` | `/v1/users/:user_id/memories/:id` | 硬删除一个记忆单元 |
+| `DELETE` | `/v1/users/:user_id/memories/:id` | 硬删除单个记忆单元 |
 | `POST` | `/v1/users/:user_id/memories/semantic/preview` | 预览语义更新或遗忘计划 |
-| `POST` | `/v1/users/:user_id/memories/semantic/execute` | 执行已审核的语义计划 |
+| `POST` | `/v1/users/:user_id/memories/semantic/execute` | 执行审核后的语义计划 |
 
-### 任务与目标（Tasks And Goals）
+### 任务与目标
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
-| `GET` | `/v1/users/:user_id/streams/:stream_id/tasks/tree` | 单个流的任务树 |
+| `GET` | `/v1/users/:user_id/streams/:stream_id/tasks/tree` | 单个 stream 的任务树 |
 | `GET` | `/v1/users/:user_id/tasks/tree` | 单个用户的所有任务树 |
-| `GET` | `/v1/users/:user_id/tasks/ready` | 就绪任务 |
+| `GET` | `/v1/users/:user_id/tasks/ready` | 可执行任务 |
 | `PUT` | `/v1/users/:user_id/tasks/:task_id/status` | 更新任务状态 |
 
-### 组织知识（Organization Knowledge）
+### 组织知识
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
@@ -70,17 +72,18 @@ POST /v1/dashboard/auth/login
 | `GET` | `/v1/organizations/:org_id/knowledge/:id` | 获取单条知识记录 |
 | `GET` | `/v1/organizations/:org_id/knowledge/metrics` | 组织知识指标 |
 
-### 集群操作（Cluster Operations）
+### 集群操作
 
 | Method | Endpoint | 用途 |
 | --- | --- | --- |
 | `POST` | `/v1/cluster/initialize` | 手动初始化集群 |
 | `POST` | `/v1/cluster/join` | 将节点加入集群 |
-| `DELETE` | `/v1/cluster/nodes/:node_id` | 从集群中移除节点 |
+| `DELETE` | `/v1/cluster/nodes/:node_id` | 从集群移除节点 |
 
 ## 集成说明
 
-- `stream_id` 在当前模型中是 UUID 路径参数。
-- 对于单节点默认部署，Raft 自动引导默认启用。
-- 文档以 `README.md`、`config.example.toml`、`.env.example` 和 `crates/memorose-server/src/main.rs` 作为权威来源。
-- 如果你正在构建自己的客户端，请从[快速开始](/zh/getting-started/quickstart)入手，然后查阅各端点的详细页面。
+- 当前模型里的 `stream_id` 是 UUID 路径参数。
+- 单节点默认部署下，Raft 自动引导默认开启。
+- `memory_type` 的序列化值是 `factual` 和 `procedural`。
+- 以 `crates/memorose-server/src/main.rs` 和 `crates/memorose-server/src/types.rs` 作为路由和 payload 的权威来源。
+- 以 `crates/memorose-common/src/config.rs` 作为运行时配置 schema 的权威来源。

@@ -1,24 +1,24 @@
 ---
 title: 代码库指南
-description: Memorose 工作区布局、crate 职责和关键模块的详细介绍。
+description: 介绍当前 Memorose 工作区布局、crate 职责和关键模块。
 ---
 
 # 代码库指南
 
 ## 工作区布局
 
-Memorose 是一个 Cargo 工作区（workspace），包含四个 crate 和一个 Next.js 仪表盘：
+Memorose 是一个 Cargo workspace，包含四个 crate 和一个 Next.js dashboard：
 
 ```text
 Memorose/
   crates/
-    memorose-common/    # 共享类型、配置、序列化
-    memorose-core/      # 核心引擎 — 存储、LLM、worker、图谱
-    memorose-server/    # Axum HTTP 服务器、Raft 共识、仪表盘认证
-    memorose-gateway/   # 无状态网关、租户分片
-  dashboard/            # Next.js 前端（TypeScript / React）
-  scripts/              # 开发辅助脚本（start_cluster.sh、build_dashboard.sh）
-  examples/             # SDK 示例和集成
+    memorose-common/    # 共享类型和配置加载
+    memorose-core/      # 核心引擎、检索、存储、图谱、worker 逻辑
+    memorose-server/    # Axum HTTP 服务和 dashboard 相关 API
+    memorose-gateway/   # 无状态分片路由网关
+  dashboard/            # Next.js 前端
+  scripts/              # 本地开发辅助脚本
+  examples/             # 示例客户端和集成
 ```
 
 ## Crate 依赖图
@@ -29,100 +29,90 @@ memorose-server ──┐
 memorose-gateway ─┘
 ```
 
-- **memorose-common** 没有内部依赖——纯类型和配置。
-- **memorose-core** 依赖 `memorose-common`，包含所有业务逻辑。
-- **memorose-server** 和 **memorose-gateway** 都依赖 `memorose-core` 和 `memorose-common`。
-
 ## Crate 职责
 
 ### memorose-common
 
-所有其他 crate 使用的共享基础：
+给整个工作区共享的基础定义：
 
-- `Event`、`EventContent`、`Memory` 领域类型
-- 配置加载——TOML 文件 + 环境变量覆盖
-- 序列化辅助工具（serde、chrono、uuid）
-- 错误类型（thiserror）
+- `Event`、`EventContent`、`MemoryUnit`、`GraphEdge`、`L3Task` 等核心类型
+- `src/config.rs` 中的运行时配置加载
+- 序列化辅助和共享枚举
+
 ### memorose-core
 
-代码库的主体部分。关键模块：
+业务逻辑和存储编排层：
 
-| 模块 | 路径 | 职责 |
+| 模块 | 路径 | 作用 |
 | --- | --- | --- |
-| `engine/` | `src/engine/` | `MemoroseEngine` — 主编排器，包含约 17 个子模块用于记忆操作 |
-| `storage/` | `src/storage/` | 多后端抽象（见下文） |
-| `worker.rs` | `src/worker.rs` | 后台整合管线：L0 → L1 → L2、衰减、修剪、社区检测 |
-| `llm/` | `src/llm/` | LLM 提供商抽象 — Gemini、OpenAI 和 Mock 实现 |
-| `graph/` | `src/graph/` | 知识图谱操作、社区检测（Louvain / LPA） |
-| `ingest/` | `src/ingest/` | 事件摄入管线（event ingestion pipeline） |
-| `raft/` | `src/raft/` | 通过 openraft 实现的分布式共识 |
-| `fact_extraction.rs` | `src/fact_extraction.rs` | 基于 LLM 的事实提取 |
-| `arbitrator.rs` | `src/arbitrator.rs` | 重叠记忆的冲突解决 |
-| `reranker.rs` | `src/reranker.rs` | 搜索结果重排序（reranking） |
+| `engine/` | `src/engine/` | `MemoroseEngine` 编排和领域工作流 |
+| `storage/` | `src/storage/` | RocksDB、向量、文本、blob、系统元数据存储 |
+| `worker.rs` | `src/worker.rs` | 后台整合、遗忘、insight 等周期任务 |
+| `llm/` | `src/llm/` | Gemini 和 OpenAI provider client |
+| `graph/` | `src/graph/` | 图谱存储、遍历、缓存和查询辅助 |
+| `ingest/` | `src/ingest/` | 多模态 ingest 辅助 |
+| `raft/` | `src/raft/` | openraft 集成 |
+| `arbitrator.rs` | `src/arbitrator.rs` | 记忆冲突与纠错计划 |
+| `reranker.rs` | `src/reranker.rs` | 内置或外部 reranking |
 
-### 存储后端（Storage Backends）
+### 存储后端
 
-均位于 `memorose-core/src/storage/` 下：
+位于 `memorose-core/src/storage/`：
 
 | 文件 | 后端 | 用途 |
 | --- | --- | --- |
-| `kv.rs` | RocksDB | L0 原始事件的键值存储 |
-| `index.rs` | LanceDB + Tantivy | L1 记忆的向量索引（LanceDB）+ 全文索引（Tantivy） |
-| `graph.rs` | 自定义 | L2 洞察的知识图谱存储 |
-| `blob.rs` | 文件系统 | 多模态内容的 Blob 存储 |
-| `system_kv.rs` | RocksDB | 系统元数据和内部状态 |
-| `tests.rs` | — | 全面的存储测试套件 |
+| `kv.rs` | RocksDB | 事件和记忆单元的持久化键值存储 |
+| `index.rs` | LanceDB + Tantivy | 向量索引和文本索引 |
+| `graph.rs` | 自定义 | 图边持久化 |
+| `blob.rs` | 文件系统 | 资产存储 |
+| `system_kv.rs` | RocksDB | 内部元数据、任务和控制状态 |
 
 ### memorose-server
 
 HTTP 层：
 
-- `main.rs` — Axum 路由、Raft 节点引导、API 处理器
-- `shard_manager.rs` — 分片到节点的路由逻辑
-- `types.rs` — API 请求/响应类型
-- `dashboard/` — 仪表盘认证和处理器端点
+- `main.rs`：路由定义和服务启动
+- `types.rs`：请求/响应 payload 类型
+- `shard_manager.rs`：分片路由和集群协调辅助
+- `dashboard/`：dashboard 所需的认证和 handler 模块
 
 ### memorose-gateway
 
-位于服务器节点前方的无状态 HTTP 代理：
+某些部署场景下的无状态路由层：
 
-- 根据 `user_id` 将请求路由到正确的分片（shard）
-- 通过 URL 路径实现租户隔离（tenant isolation）
+- 根据 shard 把请求转发到后端节点
+- 读取 `SHARD_COUNT` 等 gateway 专用环境变量
 - 自身不持有持久状态
 
-## 仪表盘前端
+## Dashboard 前端
 
-`dashboard/` 目录是一个标准的 Next.js 应用：
+当前 `dashboard/` 应用主要包括：
 
 ```text
 dashboard/src/
-  app/           # Next.js App Router 页面
-  components/    # React 组件
+  app/           # Next.js app router 页面
+  components/    # UI 组件
   lib/
-    api.ts       # API 客户端 — 所有调用通过 fetchAPI() 并携带 Bearer 认证
-    hooks.ts     # 用于数据获取的 SWR hooks
-    types.ts     # TypeScript 类型定义
+    api.ts       # API helpers
+    auth.ts      # 认证辅助
+    hooks.ts     # SWR hooks
+    types.ts     # TypeScript API 类型
 ```
 
-**应遵循的模式：**
-- 所有 API 调用通过 `lib/api.ts` 中的 `fetchAPI()`
-- 数据获取使用 `lib/hooks.ts` 中定义的 SWR hooks
-- 类型定义在 `lib/types.ts` 中，与 Rust 服务端类型对应
+## 有用的模式
 
-## 关键模式
+### Dashboard cache
 
-### SQL 过滤器构建器
+Dashboard API 响应通过 `state.dashboard_cache` 做缓存。
 
-`build_user_filter(user_id, app_id, extra)` 为 LanceDB 查询构建 SQL WHERE 子句。在向量搜索操作中广泛使用。
+### 双时态和作用域检索
 
-### KV 扫描
+检索请求支持 valid-time、transaction-time、`org_id` 和 `agent_id` 等输入。
 
-键值迭代使用 `kv.scan(b"u:")`，并通过键窗口过滤 `:unit:` 或 `:event:` 段。
+### 真正的权威来源
 
-### 仪表盘缓存
+如果文档和代码有冲突，优先看：
 
-仪表盘 API 响应通过 `state.dashboard_cache` 缓存，TTL 为 5 分钟（基于 [moka](https://github.com/moka-rs/moka)）。
-
-### 双时态搜索（Bitemporal Search）
-
-`search_bitemporal()` 支持有效时间（valid-time）和事务时间（transaction-time）查询，可选的 `agent_id` 过滤作为第 7 个参数。
+- `crates/memorose-server/src/main.rs`
+- `crates/memorose-server/src/types.rs`
+- `crates/memorose-common/src/config.rs`
