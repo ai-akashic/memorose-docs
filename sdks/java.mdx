@@ -1,17 +1,30 @@
 ---
 title: Java
-description: HTTP client pattern for Java.
+description: Java SDK for the current Memorose `/v1` runtime.
 ---
 
 # Java
 
-There is no stable official Java SDK documented here for the current `v1` runtime.
+Install the official Java SDK:
 
-Use your existing HTTP client stack and target the documented REST routes directly.
+```xml
+<dependency>
+    <groupId>dev.memorose.sdk</groupId>
+    <artifactId>memorose-client</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
 
-Typical flow:
+Basic retrieval flow:
 
-1. log in through `/v1/dashboard/auth/login`
-2. store the bearer token
-3. call `/v1/users/:user_id/streams/:stream_id/events`
-4. call `/v1/users/:user_id/streams/:stream_id/retrieve`
+```java
+MemoroseClient client = new MemoroseClient("http://127.0.0.1:3000", "your_api_key");
+IngestRequest ingest = new IngestRequest("Dylan prefers concise summaries.");
+client.ingestEvent("user_123", streamId, ingest);
+
+RetrieveRequest request = new RetrieveRequest("What does Dylan prefer?");
+request.limit = 5;
+RetrieveResponse response = client.retrieveMemory("user_123", streamId, request);
+```
+
+Server-side reranker mode, including `arbitrator`, is configured when the Memorose server starts. SDK requests do not select the reranker model.

@@ -1,27 +1,38 @@
 ---
 title: Python
-description: Thin HTTP client pattern for Python.
+description: Python SDK for the current Memorose `/v1` runtime.
 ---
 
 # Python
 
-There is no stable official Python SDK documented here for the current `v1` runtime.
+Install the official Python SDK:
 
-Use a thin HTTP wrapper around the documented HTTP routes instead.
+```bash
+pip install memorose
+```
+
+Basic retrieval flow:
 
 ```python
-import requests
+from memorose import MemoroseClient
+from memorose.types import IngestRequest, RetrieveRequest
 
-base_url = "http://127.0.0.1:3000"
-token = "<dashboard-jwt>"
-stream_id = "<uuid>"
+client = MemoroseClient("http://127.0.0.1:3000", "your_api_key")
+stream_id = "11111111-1111-1111-1111-111111111111"
 
-response = requests.post(
-    f"{base_url}/v1/users/dylan/streams/{stream_id}/retrieve",
-    headers={"Authorization": f"Bearer {token}"},
-    json={"query": "What does Dylan prefer?", "limit": 5},
-    timeout=30,
+client.ingest_event(
+    "user_123",
+    stream_id,
+    IngestRequest(content="Dylan prefers concise summaries.", org_id="default"),
 )
 
-print(response.json())
+response = client.retrieve_memory(
+    "user_123",
+    stream_id,
+    RetrieveRequest(query="What does Dylan prefer?", limit=5, org_id="default"),
+)
+
+print(response.results)
 ```
+
+Server-side reranker mode, including `arbitrator`, is configured when the Memorose server starts. SDK requests do not select the reranker model.

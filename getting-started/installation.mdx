@@ -58,9 +58,7 @@ DASHBOARD_ADMIN_PASSWORD=change-me
 
 ## Configuration
 
-Create `config.toml` yourself using the current schema from `crates/memorose-common/src/config.rs`.
-
-Do not assume `config.example.toml` is fully current. It contains older sections such as `[server]`, `[database]`, and `[consolidation]` that do not match the runtime loader exactly.
+Create `config.toml` yourself using the current schema from `crates/memorose-common/src/config.rs`, or start from `config.example.toml` / `config.toml.example` and keep `config.rs` as the final source of truth.
 
 A minimal starting point is:
 
@@ -93,6 +91,19 @@ enable_auto_planner = true
 enable_task_reflection = true
 auto_link_similarity_threshold = 0.6
 tick_interval_ms = 100
+
+[reranker]
+type = "weighted"
+```
+
+To enable internal model-based arbitration, add a reranker block:
+
+```toml
+[reranker]
+type = "arbitrator"
+model = "gemini-3.1-flash-lite-preview"
+max_candidates = 32
+fallback_to_weighted = true
 ```
 
 ## Start the stack
@@ -117,6 +128,26 @@ If you only want the API server:
 
 ```bash
 cargo run --release -p memorose-server
+```
+
+## Docker reranker configuration
+
+The Docker image starts the API server on `3000` and the dashboard on `3100`. Reranker mode is still configured by the same `MEMOROSE__*` environment variables:
+
+```bash
+docker run -d \
+  --name memorose \
+  -p 3000:3000 \
+  -p 3100:3100 \
+  -v memorose_data:/app/data \
+  -e GOOGLE_API_KEY="your_google_api_key_here" \
+  -e MEMOROSE__LLM__MODEL="gemini-3.1-flash-lite-preview" \
+  -e MEMOROSE__LLM__EMBEDDING_MODEL="gemini-embedding-2-preview" \
+  -e MEMOROSE__RERANKER__TYPE="arbitrator" \
+  -e MEMOROSE__RERANKER__MODEL="gemini-3.1-flash-lite-preview" \
+  -e MEMOROSE__RERANKER__MAX_CANDIDATES="32" \
+  -e MEMOROSE__RERANKER__FALLBACK_TO_WEIGHTED="true" \
+  dylan2024/memorose:latest
 ```
 
 ## Verify the installation

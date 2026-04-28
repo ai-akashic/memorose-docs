@@ -1,29 +1,36 @@
 ---
 title: Node.js
-description: Thin HTTP client pattern for Node.js / TypeScript.
+description: Node.js / TypeScript SDK for the current Memorose `/v1` runtime.
 ---
 
 # Node.js
 
-There is no stable official Node.js SDK documented here for the current `v1` runtime.
+Install the official Node.js / TypeScript SDK:
 
-Use a thin HTTP wrapper around the documented HTTP routes instead.
+```bash
+npm install memorose-client
+```
+
+Basic retrieval flow:
 
 ```ts
-const response = await fetch(
-  "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
-  {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: "What does Dylan prefer?",
-      limit: 5,
-    }),
-  },
-);
+import { MemoroseClient } from "memorose-client";
 
-console.log(await response.json());
+const client = new MemoroseClient("http://127.0.0.1:3000", "your_api_key");
+const streamId = "11111111-1111-1111-1111-111111111111";
+
+await client.ingestEvent("user_123", streamId, {
+  content: "Dylan prefers concise summaries.",
+  org_id: "default",
+});
+
+const response = await client.retrieveMemory("user_123", streamId, {
+  query: "What does Dylan prefer?",
+  limit: 5,
+  org_id: "default",
+});
+
+console.log(response.results);
 ```
+
+Server-side reranker mode, including `arbitrator`, is configured when the Memorose server starts. SDK requests do not select the reranker model.

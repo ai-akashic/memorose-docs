@@ -1,29 +1,36 @@
 ---
 title: Node.js
-description: Node.js / TypeScript 的轻量 HTTP 客户端模式。
+description: 面向当前 Memorose `/v1` 运行时的 Node.js / TypeScript SDK。
 ---
 
 # Node.js
 
-当前 `v1` 运行时（runtime）没有在此发布稳定的官方 Node.js SDK。
+安装官方 Node.js / TypeScript SDK：
 
-请使用围绕文档 HTTP 路由构建的轻量封装代替。
+```bash
+npm install memorose-client
+```
+
+基础检索流程：
 
 ```ts
-const response = await fetch(
-  "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
-  {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: "What does Dylan prefer?",
-      limit: 5,
-    }),
-  },
-);
+import { MemoroseClient } from "memorose-client";
 
-console.log(await response.json());
+const client = new MemoroseClient("http://127.0.0.1:3000", "your_api_key");
+const streamId = "11111111-1111-1111-1111-111111111111";
+
+await client.ingestEvent("user_123", streamId, {
+  content: "Dylan prefers concise summaries.",
+  org_id: "default",
+});
+
+const response = await client.retrieveMemory("user_123", streamId, {
+  query: "What does Dylan prefer?",
+  limit: 5,
+  org_id: "default",
+});
+
+console.log(response.results);
 ```
+
+服务端 reranker 模式，包括 `arbitrator`，在 Memorose 服务启动时配置。SDK 请求不会选择 reranker 模型。

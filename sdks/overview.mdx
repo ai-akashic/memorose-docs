@@ -1,34 +1,35 @@
 ---
-title: SDK Status
-description: Current SDK availability and the recommended HTTP-first approach.
+title: SDKs
+description: Current Memorose SDK availability and server-side retrieval configuration.
 ---
 
-# SDK Status
+# SDKs
 
-The current Memorose runtime is ahead of the older SDK documentation.
+Memorose provides thin official SDKs for the current `/v1` runtime.
 
-## Current Recommendation
+## Available SDKs
 
-If you need guaranteed alignment with the live server, use the HTTP API documented in this docs set.
+| Language | Package | Notes |
+| --- | --- | --- |
+| Python | `memorose` | Stream-scoped events and retrieval |
+| Node.js / TypeScript | `memorose-client` | Typed client for `/v1` routes |
+| Go | `github.com/memorose/memorose-sdk/go` | Context-aware HTTP client |
+| Java | `dev.memorose.sdk:memorose-client` | Java model classes and client |
 
-## Why This Section Exists
+The SDKs mirror the documented REST API and send `x-api-key` when an API key is configured.
 
-Older docs described client libraries around:
+## Reranking and arbitration
 
-- `add memory`
-- `search memories`
-- `delete memory`
-- generic `localhost:8000` CRUD flows
+Reranker mode is configured on the server, not in SDK constructors. To use internal model-based arbitrator mode, start the server with:
 
-That model does not match the current runtime centered on:
+```bash
+MEMOROSE__RERANKER__TYPE=arbitrator
+MEMOROSE__RERANKER__MODEL=gemini-3.1-flash-lite-preview
+MEMOROSE__RERANKER__MAX_CANDIDATES=32
+```
 
-- stream-scoped events
-- hybrid retrieval
-- task trees
-- organization knowledge
-- cluster operations
+The per-request `enable_arbitration` field controls retrieval-time memory arbitration behavior exposed by the API. It does not select the server reranker implementation or model.
 
-## Current Position
+## Direct HTTP fallback
 
-- No stable, fully documented official SDK is published here for the current runtime shape.
-- Language pages below show thin-wrapper patterns you can use today.
+If an SDK does not expose a newly added route yet, use the REST API documented in this site directly. The SDKs are intentionally thin wrappers over the same HTTP surface.

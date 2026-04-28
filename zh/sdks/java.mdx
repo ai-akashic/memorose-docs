@@ -1,17 +1,30 @@
 ---
 title: Java
-description: Java 的 HTTP 客户端模式。
+description: 面向当前 Memorose `/v1` 运行时的 Java SDK。
 ---
 
 # Java
 
-当前 `v1` 运行时（runtime）没有在此发布稳定的官方 Java SDK。
+安装官方 Java SDK：
 
-请使用你现有的 HTTP 客户端栈，直接调用文档中记录的 REST 路由。
+```xml
+<dependency>
+    <groupId>dev.memorose.sdk</groupId>
+    <artifactId>memorose-client</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
 
-典型流程：
+基础检索流程：
 
-1. 通过 `/v1/dashboard/auth/login` 登录
-2. 保存 Bearer 令牌（token）
-3. 调用 `/v1/users/:user_id/streams/:stream_id/events`
-4. 调用 `/v1/users/:user_id/streams/:stream_id/retrieve`
+```java
+MemoroseClient client = new MemoroseClient("http://127.0.0.1:3000", "your_api_key");
+IngestRequest ingest = new IngestRequest("Dylan prefers concise summaries.");
+client.ingestEvent("user_123", streamId, ingest);
+
+RetrieveRequest request = new RetrieveRequest("What does Dylan prefer?");
+request.limit = 5;
+RetrieveResponse response = client.retrieveMemory("user_123", streamId, request);
+```
+
+服务端 reranker 模式，包括 `arbitrator`，在 Memorose 服务启动时配置。SDK 请求不会选择 reranker 模型。

@@ -49,7 +49,7 @@ Content-Type: application/json
 | --- | --- | --- | --- |
 | `query` | string | Yes | 检索查询文本 |
 | `limit` | number | No | 最大结果数，服务端有上限 |
-| `enable_arbitration` | boolean | No | 启用仲裁检索模式 |
+| `enable_arbitration` | boolean | No | 启用 API 层的仲裁检索行为。它和服务端 `[reranker] type = "arbitrator"` 是两件事。 |
 | `min_score` | number | No | 最低分数阈值 |
 | `graph_depth` | number | No | 图扩展深度 |
 | `start_time` | ISO8601 | No | 有效时间下界 |

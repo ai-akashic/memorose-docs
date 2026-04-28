@@ -41,6 +41,8 @@ curl -s -X POST "http://127.0.0.1:3000/v1/users/user_123/streams/$STREAM_ID/retr
 - `as_of`：事务时间点过滤（Point-in-time Transaction Filtering）
 - `graph_depth`：从直接匹配的记忆扩展到相关的图谱上下文
 
+`enable_arbitration` 是单次请求层面的检索选项，不会选择服务端 reranker 模式。weighted、arbitrator 或 HTTP reranking 需要在 `[reranker]` 或 `MEMOROSE__RERANKER__*` 环境变量中配置。
+
 ## 混合检索优于单模式检索的场景
 
 - 偏好和用户画像召回

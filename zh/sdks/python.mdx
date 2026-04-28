@@ -1,27 +1,38 @@
 ---
 title: Python
-description: Python 的轻量 HTTP 客户端模式。
+description: 面向当前 Memorose `/v1` 运行时的 Python SDK。
 ---
 
 # Python
 
-当前 `v1` 运行时（runtime）没有在此发布稳定的官方 Python SDK。
+安装官方 Python SDK：
 
-请使用围绕文档 HTTP 路由构建的轻量封装代替。
+```bash
+pip install memorose
+```
+
+基础检索流程：
 
 ```python
-import requests
+from memorose import MemoroseClient
+from memorose.types import IngestRequest, RetrieveRequest
 
-base_url = "http://127.0.0.1:3000"
-token = "<dashboard-jwt>"
-stream_id = "<uuid>"
+client = MemoroseClient("http://127.0.0.1:3000", "your_api_key")
+stream_id = "11111111-1111-1111-1111-111111111111"
 
-response = requests.post(
-    f"{base_url}/v1/users/dylan/streams/{stream_id}/retrieve",
-    headers={"Authorization": f"Bearer {token}"},
-    json={"query": "What does Dylan prefer?", "limit": 5},
-    timeout=30,
+client.ingest_event(
+    "user_123",
+    stream_id,
+    IngestRequest(content="Dylan prefers concise summaries.", org_id="default"),
 )
 
-print(response.json())
+response = client.retrieve_memory(
+    "user_123",
+    stream_id,
+    RetrieveRequest(query="What does Dylan prefer?", limit=5, org_id="default"),
+)
+
+print(response.results)
 ```
+
+服务端 reranker 模式，包括 `arbitrator`，在 Memorose 服务启动时配置。SDK 请求不会选择 reranker 模型。

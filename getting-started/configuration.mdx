@@ -33,7 +33,7 @@ Notes:
 
 - `sharding` is optional.
 - `reranker` is optional and defaults to the built-in weighted reranker.
-- Older templates in this repo such as `config.example.toml` and `config.toml.example` are not fully aligned with the current runtime schema.
+- Treat `config.example.toml` and `config.toml.example` as examples; `crates/memorose-common/src/config.rs` remains the canonical schema.
 
 ## Minimal working example
 
@@ -67,6 +67,68 @@ enable_auto_planner = true
 enable_task_reflection = true
 auto_link_similarity_threshold = 0.6
 tick_interval_ms = 100
+
+[reranker]
+type = "weighted"
+```
+
+## Reranker modes
+
+Reranking is a server-side runtime setting. SDK clients do not choose the reranker mode per request.
+
+| Mode | Config | Behavior |
+| --- | --- | --- |
+| Weighted | `type = "weighted"` | Default local reranker. Combines vector similarity, importance, and recency. |
+| Arbitrator | `type = "arbitrator"` | Uses the configured LLM provider to dynamically choose only genuinely relevant candidates. It can return fewer than the requested limit, including zero. |
+| HTTP | `type = "http"` | Calls an external reranker endpoint such as Jina or a custom service. |
+
+### Arbitrator mode
+
+`arbitrator` reuses the main `[llm]` provider, API key, base URL, and embedding settings. If `reranker.model` is set, it overrides only the generation model used by the arbitrator.
+
+```toml
+[reranker]
+type = "arbitrator"
+provider = "gemini"
+model = "gemini-3.1-flash-lite-preview"
+max_candidates = 32
+fallback_to_weighted = true
+include_metadata = true
+```
+
+Important fields:
+
+- `model`: optional generation model override for arbitrator mode. If omitted, Memorose uses `[llm].model`.
+- `max_candidates`: maximum number of retrieval candidates sent to the model for arbitration. This is not a fixed result count.
+- `fallback_to_weighted`: falls back to weighted reranking if the arbitrator cannot be built or fails at runtime.
+- `include_metadata`: includes fields such as importance, level, user, org, domain, and namespace in the arbitrator prompt.
+
+For Docker, enable arbitrator mode with environment variables:
+
+```bash
+-e MEMOROSE__RERANKER__TYPE="arbitrator" \
+-e MEMOROSE__RERANKER__MODEL="gemini-3.1-flash-lite-preview" \
+-e MEMOROSE__RERANKER__MAX_CANDIDATES="32" \
+-e MEMOROSE__RERANKER__FALLBACK_TO_WEIGHTED="true"
+```
+
+### HTTP reranker mode
+
+HTTP mode is for external plugins. `top_n` applies only to HTTP mode.
+
+```toml
+[reranker]
+type = "http"
+provider = "jina"
+endpoint = "https://api.jina.ai/v1/rerank"
+model = "jina-reranker-v2-base-multilingual"
+top_n = 20
+timeout_secs = 10
+fallback_to_weighted = true
+include_metadata = true
+
+[reranker.headers]
+Authorization = "Bearer your-reranker-api-key"
 ```
 
 ## Environment variables
@@ -82,6 +144,9 @@ MEMOROSE__WORKER__CONSOLIDATION_INTERVAL_MS=1000
 MEMOROSE__WORKER__LLM_CONCURRENCY=5
 MEMOROSE__WORKER__AUTO_LINK_SIMILARITY_THRESHOLD=0.6
 MEMOROSE__RAFT__AUTO_INITIALIZE=true
+MEMOROSE__RERANKER__TYPE=arbitrator
+MEMOROSE__RERANKER__MODEL=gemini-3.1-flash-lite-preview
+MEMOROSE__RERANKER__MAX_CANDIDATES=32
 ```
 
 ### 2. Legacy direct overrides
@@ -115,7 +180,7 @@ Important:
 - `[raft]`: node identity, raft address, election timing, snapshots, bootstrap behavior
 - `[worker]`: consolidation cadence, forgetting, insight generation, task reflection, and auto-link tuning
 - `[sharding]`: multi-shard deployment settings and physical node mapping
-- `[reranker]`: built-in weighted reranking or external HTTP reranker
+- `[reranker]`: weighted reranking, internal arbitrator mode, or external HTTP reranker
 
 ## Guidance
 

@@ -1,27 +1,31 @@
 ---
 title: Go
-description: HTTP client pattern for Go.
+description: Go SDK for the current Memorose `/v1` runtime.
 ---
 
 # Go
 
-There is no stable official Go SDK documented here for the current `v1` runtime.
+Install the official Go SDK:
 
-Use the standard library or your preferred HTTP client as a thin wrapper over the documented REST routes.
+```bash
+go get github.com/memorose/memorose-sdk/go
+```
+
+Basic retrieval flow:
 
 ```go
-payload := strings.NewReader(`{"query":"What does Dylan prefer?","limit":5}`)
-req, _ := http.NewRequest(
-    http.MethodPost,
-    "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
-    payload,
-)
-req.Header.Set("Authorization", "Bearer "+token)
-req.Header.Set("Content-Type", "application/json")
+client := memorose.NewClient("http://127.0.0.1:3000", "your_api_key")
+_, _ = client.IngestEvent(ctx, "user_123", streamID, memorose.IngestRequest{
+    Content: "Dylan prefers concise summaries.",
+})
 
-resp, err := http.DefaultClient.Do(req)
+response, err := client.RetrieveMemory(ctx, "user_123", streamID, memorose.RetrieveRequest{
+    Query: "What does Dylan prefer?",
+    Limit: 5,
+})
 if err != nil {
-    panic(err)
+    log.Fatal(err)
 }
-defer resp.Body.Close()
 ```
+
+Server-side reranker mode, including `arbitrator`, is configured when the Memorose server starts. SDK requests do not select the reranker model.

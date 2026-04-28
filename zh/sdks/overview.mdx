@@ -1,34 +1,35 @@
 ---
-title: SDK 状态
-description: 当前 SDK 可用性及推荐的 HTTP 优先方案。
+title: SDK
+description: 当前 Memorose SDK 可用性和服务端检索配置。
 ---
 
-# SDK 状态
+# SDK
 
-当前 Memorose 运行时（runtime）已超前于旧版 SDK 文档。
+Memorose 为当前 `/v1` 运行时提供轻量官方 SDK。
 
-## 当前建议
+## 可用 SDK
 
-如果你需要与线上服务器保持一致，请使用本文档集中记录的 HTTP API。
+| 语言 | 包名 | 说明 |
+| --- | --- | --- |
+| Python | `memorose` | 支持 stream 作用域事件和检索 |
+| Node.js / TypeScript | `memorose-client` | 面向 `/v1` 路由的类型化客户端 |
+| Go | `github.com/memorose/memorose-sdk/go` | 支持 context 的 HTTP 客户端 |
+| Java | `dev.memorose.sdk:memorose-client` | Java 模型类和客户端 |
 
-## 为什么保留此章节
+SDK 与文档中的 REST API 保持一致，并在配置 API key 时发送 `x-api-key`。
 
-旧版文档描述的客户端库围绕以下操作：
+## Reranking 和 arbitration
 
-- `add memory`
-- `search memories`
-- `delete memory`
-- 通用的 `localhost:8000` CRUD 流程
+Reranker 模式由服务端配置决定，不在 SDK 构造函数里选择。要使用内部基于模型的 arbitrator 模式，启动服务端时配置：
 
-该模型与当前运行时不匹配，当前运行时以以下功能为核心：
+```bash
+MEMOROSE__RERANKER__TYPE=arbitrator
+MEMOROSE__RERANKER__MODEL=gemini-3.1-flash-lite-preview
+MEMOROSE__RERANKER__MAX_CANDIDATES=32
+```
 
-- 流作用域事件（stream-scoped events）
-- 混合检索（hybrid retrieval）
-- 任务树（task trees）
-- 组织知识（organization knowledge）
-- 集群操作（cluster operations）
+请求里的 `enable_arbitration` 字段控制 API 暴露的检索时记忆裁决行为。它不会选择服务端 reranker 实现或模型。
 
-## 当前状况
+## 直接 HTTP 兜底
 
-- 目前没有针对当前运行时形态发布稳定且完整文档的官方 SDK。
-- 下方的语言页面展示了你现在可以使用的轻量封装模式（thin-wrapper patterns）。
+如果某个 SDK 还没有暴露新路由，可以直接调用本站记录的 REST API。SDK 本质上是同一套 HTTP 接口的轻量封装。

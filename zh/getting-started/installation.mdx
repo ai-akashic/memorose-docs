@@ -58,9 +58,7 @@ DASHBOARD_ADMIN_PASSWORD=change-me
 
 ## 配置
 
-请根据 `crates/memorose-common/src/config.rs` 中的当前 schema 自行创建 `config.toml`。
-
-不要假设 `config.example.toml` 一定是最新的。它包含 `[server]`、`[database]`、`[consolidation]` 等旧段落，和当前运行时加载器并不完全一致。
+请根据 `crates/memorose-common/src/config.rs` 中的当前 schema 自行创建 `config.toml`，也可以从 `config.example.toml` / `config.toml.example` 起步，并始终以 `config.rs` 作为最终权威来源。
 
 一个最小起步配置如下：
 
@@ -93,6 +91,19 @@ enable_auto_planner = true
 enable_task_reflection = true
 auto_link_similarity_threshold = 0.6
 tick_interval_ms = 100
+
+[reranker]
+type = "weighted"
+```
+
+如果要开启内部基于模型的 arbitration，可增加 reranker 配置段：
+
+```toml
+[reranker]
+type = "arbitrator"
+model = "gemini-3.1-flash-lite-preview"
+max_candidates = 32
+fallback_to_weighted = true
 ```
 
 ## 启动服务栈
@@ -117,6 +128,26 @@ tick_interval_ms = 100
 
 ```bash
 cargo run --release -p memorose-server
+```
+
+## Docker reranker 配置
+
+Docker 镜像会在 `3000` 启动 API 服务，在 `3100` 启动仪表盘。Reranker 模式仍通过同一套 `MEMOROSE__*` 环境变量配置：
+
+```bash
+docker run -d \
+  --name memorose \
+  -p 3000:3000 \
+  -p 3100:3100 \
+  -v memorose_data:/app/data \
+  -e GOOGLE_API_KEY="your_google_api_key_here" \
+  -e MEMOROSE__LLM__MODEL="gemini-3.1-flash-lite-preview" \
+  -e MEMOROSE__LLM__EMBEDDING_MODEL="gemini-embedding-2-preview" \
+  -e MEMOROSE__RERANKER__TYPE="arbitrator" \
+  -e MEMOROSE__RERANKER__MODEL="gemini-3.1-flash-lite-preview" \
+  -e MEMOROSE__RERANKER__MAX_CANDIDATES="32" \
+  -e MEMOROSE__RERANKER__FALLBACK_TO_WEIGHTED="true" \
+  dylan2024/memorose:latest
 ```
 
 ## 验证安装

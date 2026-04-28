@@ -41,6 +41,8 @@ curl -s -X POST "http://127.0.0.1:3000/v1/users/user_123/streams/$STREAM_ID/retr
 - `as_of`: point-in-time transaction filtering
 - `graph_depth`: expand from directly matched memory into related graph context
 
+`enable_arbitration` is a request-level retrieval option. It does not choose the server-side reranker mode. Configure weighted, arbitrator, or HTTP reranking in `[reranker]` or through `MEMOROSE__RERANKER__*` environment variables.
+
 ## When Hybrid Beats Single-Mode Search
 
 - Preference and profile recall

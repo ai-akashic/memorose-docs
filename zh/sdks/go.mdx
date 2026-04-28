@@ -1,27 +1,31 @@
 ---
 title: Go
-description: Go 的 HTTP 客户端模式。
+description: 面向当前 Memorose `/v1` 运行时的 Go SDK。
 ---
 
 # Go
 
-当前 `v1` 运行时（runtime）没有在此发布稳定的官方 Go SDK。
+安装官方 Go SDK：
 
-请使用标准库或你偏好的 HTTP 客户端，围绕文档中的 REST 路由做轻量封装。
+```bash
+go get github.com/memorose/memorose-sdk/go
+```
+
+基础检索流程：
 
 ```go
-payload := strings.NewReader(`{"query":"What does Dylan prefer?","limit":5}`)
-req, _ := http.NewRequest(
-    http.MethodPost,
-    "http://127.0.0.1:3000/v1/users/dylan/streams/<uuid>/retrieve",
-    payload,
-)
-req.Header.Set("Authorization", "Bearer "+token)
-req.Header.Set("Content-Type", "application/json")
+client := memorose.NewClient("http://127.0.0.1:3000", "your_api_key")
+_, _ = client.IngestEvent(ctx, "user_123", streamID, memorose.IngestRequest{
+    Content: "Dylan prefers concise summaries.",
+})
 
-resp, err := http.DefaultClient.Do(req)
+response, err := client.RetrieveMemory(ctx, "user_123", streamID, memorose.RetrieveRequest{
+    Query: "What does Dylan prefer?",
+    Limit: 5,
+})
 if err != nil {
-    panic(err)
+    log.Fatal(err)
 }
-defer resp.Body.Close()
 ```
+
+服务端 reranker 模式，包括 `arbitrator`，在 Memorose 服务启动时配置。SDK 请求不会选择 reranker 模型。

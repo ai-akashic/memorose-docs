@@ -49,7 +49,7 @@ Content-Type: application/json
 | --- | --- | --- | --- |
 | `query` | string | Yes | Retrieval query text |
 | `limit` | number | No | Max results, capped server-side |
-| `enable_arbitration` | boolean | No | Enable arbitrated retrieval mode |
+| `enable_arbitration` | boolean | No | Enable API-level arbitrated retrieval behavior. This is separate from server-side `[reranker] type = "arbitrator"`. |
 | `min_score` | number | No | Minimum score cutoff |
 | `graph_depth` | number | No | Graph expansion depth |
 | `start_time` | ISO8601 | No | Valid-time lower bound |
